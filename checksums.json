@@ -1,0 +1,12 @@
+{
+  "bash/basics.sh": "a93ae064b83608ce656066a486ef7b0a3504068821ae55d8ae42afc8fd250b92",
+  "bash/chrome.sh": "5e3317801ba93698e5df08553cf4f49eec4dbf1329fb451f35b3ebf9dcd3f17a",
+  "bash/clipboard_indicator.sh": "01838e1cf8beea72e49b70bf83e448070e1558d919adab56f83c1716ec22a451",
+  "bash/code_force_ip4.sh": "63b20a70d3c99b7f5ec79c2581b2059157d319eaa934b08a20e4c388624127fc",
+  "bash/dash-to-panel.sh": "8600f3cf2011571cc0f4dc65bf512ef422c39e0d7df335821c8677cad94012b4",
+  "bash/edge.sh": "1d93dfedb0885d0f978ce9c7053cb0049113affd1db73c89d24ed611bad0ef96",
+  "bash/ull.sh": "f9363664f007aa44ce99cb835e1fc3b33a30cf5f7258d92c566686f587da1bf2",
+  "bash/vivaldi.sh": "d9f1f7e6880460f40a112b5fec6e9261e0807800c20c7bd8911952ad77722313",
+  "bash/vscode.sh": "b59e36866c7b2123fa06a1ef7fae4e3440bdaca0d4243bfa88de26c5ac75329c",
+  "scripts/inf.py": "f765ee6148be69d57ed136861b6638b97f88654029e267e09eae482643ba3e39"
+}
