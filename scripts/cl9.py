@@ -144,7 +144,7 @@ MAGIC = b'KVD1'
 SALT_LEN = 16
 NONCE_LEN = 12
 PBKDF2_ITERS = 200_000
-KEY_TTL_SEC = 600
+KEY_TTL_SEC = 3600
 KEY_CACHE = _cache_path()
 SBOX = [
     0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
@@ -248,7 +248,7 @@ def _setup_aliases() -> int:
 alias ad='{py} {_p}/add_auto.py'
 alias chat='{py} {_p}/chat.py'
 alias cl9='{py} {_p}/cl9.py'
-alias inf'{py} {_p}/inf.py'
+alias inf='{py} {_p}/inf.py'
 alias mtl='{py} {_p}/mtl.py'
 alias rev='{py} {_p}/__main__.py'
 alias todo='{py} {_p}/todo.py'
@@ -383,7 +383,6 @@ def native_reqs(): # --cl9
 # FEDORA
 if command -v dnf >/dev/null 2>&1; then
     echo "You are using dnf based platform"
-    sudo dnf upgrade -y || true
     sudo dnf install xclip || echo "failed: xclip"
 
     echo "Ensuring and Downloading pip"
@@ -414,7 +413,6 @@ elif command -v pkg >/dev/null 2>&1; then
 # Arch Linux
 elif command -v pacman >/dev/null 2>&1; then
     echo "You are using Arch-based platform"
-    sudo pacman -Syu --noconfirm || true
     sudo pacman -S xclip || true
 
     # ensure python + pip exist
@@ -432,9 +430,6 @@ elif command -v pacman >/dev/null 2>&1; then
 # UBUNTU / Debian
 elif command -v apt-get >/dev/null 2>&1; then
     echo "You are using Ubuntu/Debian"
-
-    sudo apt-get update -y || true
-    sudo apt-get upgrade -y || true
     sudo apt install xclip || echo "failed: xclip"
 
     echo "Ensuring and downloading pip"
