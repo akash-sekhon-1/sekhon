@@ -3,7 +3,8 @@
 """
 inf.py
 
-1. This module is available publically at curl -O 
+1. This module is available publically at curl -O https://raw.githubusercontent.com/akash-sekhon-1/sekhon/main/scripts/cl9.py
+
 So I can download it from anywhere globally and set up my system in seconds.
 
 
@@ -254,7 +255,7 @@ def _atomic_download_with_sha256(
 # =========================
 
 # ----------------------------
-def update_self(checksums: Optional[dict[str, str]]=None) -> str:
+def update_self(checksums: Optional[dict[str, str]]=None, stats: bool=True) -> str:
     """
     Update inf.py from GitHub, using checksums.json for sha256 integrity.
     Returns the path to the updated script.
@@ -271,7 +272,8 @@ def update_self(checksums: Optional[dict[str, str]]=None) -> str:
     if os.path.exists(CURRENT_PATH):
         local_sha = _sha256_file(CURRENT_PATH)
         if local_sha.lower() == expected_sha.lower():
-            # Already current
+            if stats:
+                crint("Already the Latest version", 'green')
             return CURRENT_PATH
 
     remote_url = GITHUB_RAW_BASE + SELF_REMOTE_PATH
@@ -281,7 +283,6 @@ def update_self(checksums: Optional[dict[str, str]]=None) -> str:
         CURRENT_PATH,
         make_executable=True
     )
-
     crint("Please restart the Program to use the latest version", 'orange')
     sys.exit(0)
 
