@@ -43,4 +43,4 @@ echo "[INFO] Enabling Dash-to-Panel..."
 gnome-extensions enable "$DTP_UUID" 2>/dev/null || true
 
 echo "[INFO] Dash-to-Panel installation complete."
-echo "[INFO] Restart GNOME Shell (logout/login or Alt+F2 → r) to apply fully."
+echo "[INFO] Restart GNOME Shell (logout/login or Alt+F2 → r) to apply fully"
