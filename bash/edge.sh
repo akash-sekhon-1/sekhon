@@ -69,6 +69,6 @@ EOF
 sudo apt-get update -y
 sudo apt-get install -y microsoft-edge-stable
 
-echo "✔ Edge installed."
+echo "✔ Edge installed"
 exit 0
 
