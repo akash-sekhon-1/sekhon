@@ -254,12 +254,13 @@ def _atomic_download_with_sha256(
 # =========================
 
 # ----------------------------
-def update_self() -> str:
+def update_self(checksums: Optional[dict[str, str]]=None) -> str:
     """
     Update inf.py from GitHub, using checksums.json for sha256 integrity.
     Returns the path to the updated script.
     """
-    checksums = _fetch_checksums()
+    if checksums is None:
+        checksums = _fetch_checksums()
     expected_sha = checksums.get(SELF_REMOTE_PATH)
     if not expected_sha:
         raise RuntimeError(
@@ -286,15 +287,13 @@ def update_self() -> str:
 
 
 # -----------------------------------------
-def ensure_bash_script(repo_rel_path: str) -> Optional[str]:
+def ensure_bash_script(repo_rel_path: str, checksums: dict[str, str]) -> Optional[str]:
     """
     Given a label in BASH_SCRIPTS, ensure the script is present locally
     under LOCAL_BASH_DIR, verified by sha256 from checksums.json.
 
     Returns the local absolute path.
     """
-
-    checksums = _fetch_checksums()
     expected_sha = checksums.get(repo_rel_path)
     if not expected_sha:
         return None
@@ -481,6 +480,9 @@ def _help():
 
 # -------------------------------------------
 def main():
+    checksums = _fetch_checksums()
+    update_self(checksums)
+
     _validate_OPTS()
     args = sys.argv[1:]
 
@@ -588,7 +590,7 @@ def main():
             p()
             continue
 
-        r = ensure_bash_script(p)
+        r = ensure_bash_script(p, checksums)
         if r is None:
             crint(f"no checksum entry for {p} in checksums.json; Skipping it", 'red')
             continue
