@@ -255,7 +255,7 @@ def _atomic_download_with_sha256(
 # =========================
 
 # ----------------------------
-def update_self(checksums: Optional[dict[str, str]]=None, stats: bool=True) -> str:
+def update_self(checksums: Optional[dict[str, str]]=None) -> str:
     """
     Update inf.py from GitHub, using checksums.json for sha256 integrity.
     Returns the path to the updated script.
@@ -272,8 +272,6 @@ def update_self(checksums: Optional[dict[str, str]]=None, stats: bool=True) -> s
     if os.path.exists(CURRENT_PATH):
         local_sha = _sha256_file(CURRENT_PATH)
         if local_sha.lower() == expected_sha.lower():
-            if stats:
-                crint("Already the Latest version", 'green')
             return CURRENT_PATH
 
     remote_url = GITHUB_RAW_BASE + SELF_REMOTE_PATH
@@ -613,19 +611,9 @@ MUST_FIELDS = [
 ]
 
 OPTS = {
-    # ===================================================================
-    # Core & Meta
-    # ===================================================================
     '--help': {
         'd': "Show this help message and exit",
         'p': _help,
-        'w': None,
-        'dep': None
-    },
-
-    '--update': {
-        'd': "Securely update inf.py to the latest version (SHA-256 verified from GitHub)",
-        'p': update_self,
         'w': None,
         'dep': None
     },
