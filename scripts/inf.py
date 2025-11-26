@@ -450,13 +450,17 @@ def _validate_OPTS():
         if OPTS[o]['w'] is not None and not isinstance(OPTS[o]['w'], str):
             crint(f"[INVALID] w (warning) must be None or string; OPTS -> {o}", 'red')
             sys.exit(1)
-        if OPTS[o]['dep'] is not None and not isinstance(OPTS[o]['dep'], list):
+
+        dep = OPTS[o]['dep']
+        if dep is not None and not isinstance(OPTS[o]['dep'], list):
             crint(f"[INVALID] d (dependencies) must be None or list[str]; OPTS -> {o}", 'red')
             sys.exit(1)
-        for d in OPTS[o]['dep']:
-            if d not in OPTS:
-                crint(f"[INVALID] {d} is not a valid option. OPTS -> {o} -> {d}", 'red')
-                sys.exit(1)
+        
+        if dep:
+            for d in dep:
+                if d not in OPTS:
+                    crint(f"[INVALID] {d} is not a valid option. OPTS -> {o} -> {d}", 'red')
+                    sys.exit(1)
 
 
 
