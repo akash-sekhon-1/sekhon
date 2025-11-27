@@ -23,6 +23,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+import time
 from textwrap import fill
 from typing import Optional
 
@@ -40,6 +41,7 @@ CURRENT_PATH = os.path.abspath(os.path.realpath(__file__))
 SCRIPTER_DIR = os.path.join(HOME, ".local", "sekhon")
 LOCAL_BASH_DIR = os.path.join(SCRIPTER_DIR, "bash")
 LOCAL_TMP_DIR = os.path.join(SCRIPTER_DIR, "tmp")  # for atomic writes and tmp data
+LOCAL_SCHE_PATH = os.path.join(SCRIPTER_DIR, 'schedule.json')
 
 for _dir in (LOCAL_BASH_DIR, LOCAL_TMP_DIR):
     if not os.path.exists(_dir):
@@ -84,6 +86,71 @@ COLOR_MAP = {
 }
 
 
+
+# ===========================
+# MARK: SCHUDULE
+# ===========================
+
+SCHE_KEEP_BASH: float = 86400.0 * 30.0 # Keep a bash file for this many days
+SCHE_FETCH_LIMIT_HOURLY: int = 40 # A maximum of 40 fetches allowed per hour
+
+
+
+
+class Schedule:
+    """
+    {
+        'reqs': [ts, ts, ts] # timestamp of individual requests made
+    }
+    """
+    def __init__(self):
+        self.sche_dict = self._get_sche()
+
+    def _get_sche(self):
+        try:
+            with open(LOCAL_SCHE_PATH, 'r') as f:
+                return json.load(f)
+            
+        except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError):
+            return {}
+
+    def _save_sche(self):
+        ...
+
+    def terminate(self):
+        """
+        Use all the end of the program to save progress
+        """
+        ...
+
+    def reqs_left(self) -> int:
+        old_reqs: list[float] = self.sche_dict.get('reqs', {})
+        hour_ago_ts = time.time() - 60.0 * 60.0
+        
+        reqs: list[float] = [r for r in old_reqs if r >= hour_ago_ts]
+        reqs_n = len(reqs)
+        if reqs_n != len(old_reqs):
+            self._reqs_overwrite(reqs)
+        return SCHE_FETCH_LIMIT_HOURLY - reqs_n
+
+
+    def _reqs_overwrite(self, new_reqs: list[float]):
+        """
+        overwrites the reqs list
+        """
+        self.sche_dict['reqs'] = new_reqs
+
+    def reqs_add(self):
+        ...
+
+    def reqs_reset_in(self) -> Optional[float]:
+        """
+        returns None if you have requests left. Else returns seconds left until requests reset.
+        """
+        ...
+    
+    def bash_cleanup(self):
+        ...
 
 
 
@@ -329,7 +396,7 @@ def ensure_bash_script(repo_rel_path: str, checksums: dict[str, str]) -> Optiona
 # -----------------------------
 def launch_bash(path: str):
     try:
-        os.chmod(path, 0o755)
+        os.chmod(path, 0o755) 
         try:
             subprocess.run(["bash", path], check=False)
         except (KeyboardInterrupt, EOFError):
