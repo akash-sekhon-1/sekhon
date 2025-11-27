@@ -251,6 +251,7 @@ alias cl9='{py} {_p}/cl9.py'
 alias mtl='{py} {_p}/mtl.py'
 alias rev='{py} {_p}/__main__.py'
 alias todo='{py} {_p}/todo.py'
+alias up_flash='{py} {_p}/update_flashcards.py'
 
 """
 
