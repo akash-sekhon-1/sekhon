@@ -1538,6 +1538,10 @@ def decoder_main() -> Optional[dict[str, str]]:
     if cached_key:
         try:
             d = _decrypt_with_cached_key(blob, cached_key)
+            if not all(k in d for k in AWS_REQ_KEYS):
+                crint("The creds file have invalid keys. Removing it.", 'red')
+                os.remove(in_path)
+                sys.exit(2)
             refresh_cached_key()
             return d
         except:
