@@ -252,7 +252,6 @@ alias mtl='{py} {_p}/mtl.py'
 alias rev='{py} {_p}/__main__.py'
 alias todo='{py} {_p}/todo.py'
 alias tools='{py} {_p}/tools.py'
-alias up_flash='{py} {_p}/update_flashcards.py'
 
 """
 
@@ -401,6 +400,7 @@ elif command -v pkg >/dev/null 2>&1; then
     pkg upgrade -y || true
     pkg install -y python || true
     pkg install -y termux-api || true
+    
 
     echo "Ensuring and Downloading pip"
     {py} -m ensurepip || true   # pip upgrade forbidden on termux
