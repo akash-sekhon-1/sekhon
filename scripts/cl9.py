@@ -29,27 +29,41 @@ import shutil
 import subprocess
 import sys
 import tarfile
-import time
 import tempfile
+import time
+from getpass import getuser
+from socket import gethostname
 from textwrap import fill
 from typing import Dict, Optional
 from uuid import uuid4
 
 
-
-
 # ===========================
 # GLOBAL
 # ===========================
+poin = os.path.join
+PC_login_name: str = "akash@n0"
+login_name: str = f"{getuser()}@{gethostname()}" # fast wifi PC where compaction happens automatically
+MAIN_PC: bool = PC_login_name == login_name
+HOME: str = os.path.expanduser("~")
+
+
+if MAIN_PC and os.path.exists(poin(HOME, "cl9_dev")) and os.path.abspath(os.path.relpath(__file__)) == poin(HOME, "cl9_dev/m/cl9.py"):
+    print("DEVELOPMENT MODE ON")
+    PROGRAM_NAME = 'cl9_dev'
+    DEV_PC = True
+else:
+    PROGRAM_NAME = 'cl9'
+    DEV_PC = False
+
 prefer_conda = True # if anaconda3/bin/python3 is present prefer it over python3, if False uses python3 always
-PROGRAM_NAME = 'cl9'
 
 # ===========================
 # MARK: PATH CONST
 # ===========================
 
-poin = os.path.join
 LOCAL_AG_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
+ALIAS_REL_PATH          = ".cl9_aliases"
 LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD_4M")
 
 LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
@@ -237,7 +251,7 @@ def _setup_aliases() -> int:
     Setups the aliases if they don't exist already.
     Returns 0 if aliases already existed. Returns 1 if just created (print refresh .bashrc)
     """
-    alias_path = _get_fp(f".{PROGRAM_NAME}_aliases")
+    alias_path = _get_fp(ALIAS_REL_PATH)
 
     py = _get_py()
     _p = LOCAL_MAIN_DIR 
@@ -289,6 +303,10 @@ def get_cl9(): # --cl9
         native_reqs()
         crint("Dependencies installed. Please run the same command again")
         sys.exit(0)
+
+    if DEV_PC:
+        crint("This operation is not allowed on the DEV MODE")
+        return 0
 
     __creds = get_creds()
     S3, BUCKET_NAME = get_s3_bucket(__creds)
