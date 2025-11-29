@@ -147,11 +147,13 @@ MONTH_FMT: str = '%Y-%m'
 # MARK: CRYPTO CONST
 # ===========================
 
+# ----------------------------------------------
 def _cache_path():
     run_dir = f"/run/user/{os.getuid()}"
     if os.path.isdir(run_dir):
-        return os.path.join(run_dir, "cl9_passcache")
-    return os.path.join(tempfile.gettempdir(), "cl9_passcache")  # termux
+        return os.path.join(run_dir, f"{PROGRAM_NAME}_passcache")
+    return os.path.join(tempfile.gettempdir(), f"{PROGRAM_NAME}_passcache") # for termux
+
 
 
 MAGIC = b'KVD1'
@@ -305,7 +307,7 @@ def get_cl9(): # --cl9
         sys.exit(0)
 
     if DEV_PC:
-        crint("This operation is not allowed on the DEV MODE")
+        crint("This operation is not allowed on the DEV MODE", 'red')
         return 0
 
     __creds = get_creds()
@@ -770,12 +772,6 @@ def crint(text: str, color: str='white', end='\n') -> None:
 # MARK: KEYCACHE
 # ===========================
 
-# ----------------------------------------------
-def _cache_path():
-    run_dir = f"/run/user/{os.getuid()}"
-    if os.path.isdir(run_dir):
-        return os.path.join(run_dir, f"{PROGRAM_NAME}_passcache")
-    return os.path.join(tempfile.gettempdir(), f"{PROGRAM_NAME}_passcache") # for termux
 
 
 # -----------------------------------------------------------
