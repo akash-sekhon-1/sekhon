@@ -86,6 +86,8 @@ LOCAL_LOG_PATH          = poin(LOCAL_JSON_DIR, "log_err.txt")
 LOCAL_CAREER_NEWS       = poin(LOCAL_JSON_DIR, "career_news.json")
 LOCAL_CREDS_PATH         = poin(LOCAL_JSON_DIR, ".creds")
 
+LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
+# has two keys, 'last_sync': ts and 'history': {hash: date}
 
 # PUBLIC
 LOCAL_CL9_NAME = 'cl9.py'
@@ -126,10 +128,13 @@ AWS_SUB_MAIN_PRE   = f"{AWS_JSON_PRE}/m"
 AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
 AWS_VERSION_PRE    = f"{AWS_JSON_PRE}/v" # will contain an empty file inside like 1735252.txt
 
+AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json"
+# has two keys, 'last_sync': ts and 'history': {hash: date}
+
+
 AWS_TGZ_KEY  = f"{AWS_SCRIPTS_PRE}/complete_flashcard_program.tgz"
 AWS_CL9_KEY = f"{AWS_SCRIPTS_PRE}/{LOCAL_CL9_NAME}"
 AWS_INF_KEY = f"{AWS_SCRIPTS_PRE}/{LOCAL_INF_NAME}"
-
 
 
 
