@@ -191,7 +191,7 @@ KEYCTL_SEARCH      = 10
 KEYCTL_READ        = 11
 KEYCTL_SET_TIMEOUT = 15
 
-_KEYRING_DESC = b"cl9_cached_key"
+_KEYRING_DESC = f"cl9_kcache_{PROGRAM_NAME}".encode()
 _KEYRING_TYPE = b"user"
 
 _keyring_available_cached: Optional[bool] = None
