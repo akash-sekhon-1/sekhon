@@ -774,8 +774,8 @@ def crint(text: str, color: str='white', end='\n') -> None:
 def _cache_path():
     run_dir = f"/run/user/{os.getuid()}"
     if os.path.isdir(run_dir):
-        return os.path.join(run_dir, "cl9_passcache")
-    return os.path.join(tempfile.gettempdir(), "cl9_passcache") # for termux
+        return os.path.join(run_dir, f"{PROGRAM_NAME}_passcache")
+    return os.path.join(tempfile.gettempdir(), f"{PROGRAM_NAME}_passcache") # for termux
 
 
 # -----------------------------------------------------------
