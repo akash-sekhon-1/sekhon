@@ -2,6 +2,8 @@
 
 # ULL SETUP (includes BASICS + ULL)
 
+# include: stress-ng
+
 # FEDORA
 if command -v dnf >/dev/null 2>&1; then
     echo -e "\nYou are using dnf based platform.\n"
