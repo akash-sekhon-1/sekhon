@@ -123,6 +123,7 @@ AWS_REQ_KEYS = {
 
 AWS_SCRIPTS_PRE  = f"scripts"
 AWS_JSON_PRE     = f"j"
+AWS_AWS_PRE = f"aws"
 
 AWS_SUB_MAIN_PRE   = f"{AWS_JSON_PRE}/m"
 AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
