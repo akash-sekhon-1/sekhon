@@ -86,7 +86,7 @@ LOCAL_LOG_PATH          = poin(LOCAL_JSON_DIR, "log_err.txt")
 LOCAL_CAREER_NEWS       = poin(LOCAL_JSON_DIR, "career_news.json")
 LOCAL_CREDS_PATH         = poin(LOCAL_JSON_DIR, ".creds")
 
-LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
+LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 # PUBLIC
@@ -128,7 +128,7 @@ AWS_SUB_MAIN_PRE   = f"{AWS_JSON_PRE}/m"
 AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
 AWS_VERSION_PRE    = f"{AWS_JSON_PRE}/v" # will contain an empty file inside like 1735252.txt
 
-AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json"
+AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json.gz"
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 
