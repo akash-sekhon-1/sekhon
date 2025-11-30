@@ -269,6 +269,7 @@ def _setup_aliases() -> int:
 alias ad='{py} {_p}/add_auto.py'
 alias chat='{py} {_p}/chat.py'
 alias cl9='{py} {_p}/cl9.py'
+alias cotes='{py} {_p}/cotes.py'
 alias mtl='{py} {_p}/mtl.py'
 alias rev='{py} {_p}/__main__.py'
 alias todo='{py} {_p}/todo.py'
