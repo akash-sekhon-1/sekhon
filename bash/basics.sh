@@ -3,6 +3,8 @@
 
 # -------- Platform detection and lightweight utilities ------------
 
+# include: stress-ng
+
 # FEDORA
 if command -v dnf >/dev/null 2>&1; then
     echo "You are using dnf based platform"
