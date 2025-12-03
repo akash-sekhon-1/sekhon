@@ -764,6 +764,13 @@ OPTS = {
         'w': None,
         'dep': None
     },
+
+    '--lazy-vim': {
+        'd': "Installs and setup the lazy vim for neovim",
+        'p': "bash/lazy-vim.sh",
+        'w': None,
+        'dep': None
+    }
 }
 
 # ------------------------
