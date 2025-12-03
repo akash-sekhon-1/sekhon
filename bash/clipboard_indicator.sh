@@ -24,7 +24,7 @@ fi
 # Install Clipboard Indicator
 # -------------------------------------
 CLIP_UUID="clipboard-indicator@tudmotu.com"
-CLIP_URL="https://extensions.gnome.org/extension-data/clipboard-indicatortudmotu.com.v36.shell-extension.zip"
+CLIP_URL="https://extensions.gnome.org/extension-data/clipboard-indicatortudmotu.com.v68.shell-extension.zip"
 
 if gnome-extensions list | grep -q "$CLIP_UUID"; then
     echo "[INFO] Clipboard Indicator already installed."
