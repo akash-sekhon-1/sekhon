@@ -1474,7 +1474,7 @@ def coder_main() -> bool:
     output("Type 'p' to get the value directly from the clipboard (works on termux if termux-api is installed)")
 
     d = {}
-    exits = ['aban', 'exit', 'end', '990']
+    exits = ['aban', 'exit', 'end', 'ooo']
     for k in AWS_REQ_KEYS:
         while True:
             print()
