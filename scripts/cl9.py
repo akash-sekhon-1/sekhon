@@ -268,6 +268,7 @@ def _setup_aliases() -> int:
 # cl9 Aliases
 
 alias ad='{py} {_p}/add_auto.py'
+alias adt='{py} {_p}/add_tasks.py'
 alias aws='{py} {_p}/aws.py'
 alias chat='{py} {_p}/chat.py'
 alias cl9='{py} {_p}/cl9.py'
