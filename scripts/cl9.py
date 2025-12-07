@@ -68,7 +68,8 @@ LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD_4M")
 
 LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
 LOCAL_JSON_DIR          = poin(LOCAL_AG_DIR, "j")
-LOCAL_TMP_DIR           = poin (LOCAL_AG_DIR, "tmp")
+LOCAL_TMP_DIR           = poin(LOCAL_AG_DIR, "tmp")
+LOCAL_BAK_DIR           = poin(LOCAL_AG_DIR, 'bak')
 
 # SUB DIRS
 LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
@@ -104,7 +105,7 @@ VERSION_SUFFIX: str = "v.gz"
 
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR):
+for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR):
     if not os.path.exists(direc):
         os.makedirs(direc)
 
