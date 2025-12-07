@@ -294,7 +294,14 @@ alias tools='{py} {_p}/tools.py'
             f1.write(f_aliases)
     
     bashrc_path = _get_fp(".bashrc")
-    src_cmd = f"\n\n# Sourcing cl9 aliases\nsource {alias_path}\n"
+    src_cmd = f"""
+
+# Sourcing cl9 aliases
+if [[ -f {alias_path} ]]; then
+    source {alias_path}
+fi
+
+"""
     if os.path.exists(_get_fp(".bashrc")):
         with open(bashrc_path, 'r') as f:
             if src_cmd not in f.read():
