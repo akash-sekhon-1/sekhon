@@ -62,6 +62,7 @@ prefer_conda = True # if anaconda3/bin/python3 is present prefer it over python3
 # MARK: PATH CONST
 # ===========================
 
+HOME =  os.path.expanduser("~")
 LOCAL_AG_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
 ALIAS_REL_PATH          = ".cl9_aliases"
 LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD_4M")
@@ -70,7 +71,7 @@ LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
 LOCAL_JSON_DIR          = poin(LOCAL_AG_DIR, "j")
 LOCAL_TMP_DIR           = poin(LOCAL_AG_DIR, "tmp")
 LOCAL_BAK_DIR           = poin(LOCAL_AG_DIR, 'bak')
-LOCAL_SPEECH_DIR        = poin(LOCAL_AG_DIR, ".speech")
+LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
 
 # SUB DIRS
 LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
@@ -278,6 +279,7 @@ alias chat='{py} {_p}/chat.py'
 alias cl9='{py} {_p}/cl9.py'
 alias cotes='{py} {_p}/cotes.py'
 alias mtl='{py} {_p}/mtl.py'
+alias mytimer='{py} {_p}/mytimer.py'
 alias rev='{py} {_p}/__main__.py'
 alias todo='{py} {_p}/todo.py'
 alias tools='{py} {_p}/tools.py'
