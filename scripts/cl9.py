@@ -133,13 +133,13 @@ AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
 AWS_VERSION_PRE    = f"{AWS_JSON_PRE}/v" # will contain an empty file inside like 1735252.txt
 
 AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json.gz"
+AWS_CLIP_KEY = f"{AWS_JSON_PRE}/.clips.json.gz"
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 
 AWS_TGZ_KEY  = f"{AWS_SCRIPTS_PRE}/complete_flashcard_program.tgz"
 AWS_CL9_KEY = f"{AWS_SCRIPTS_PRE}/{LOCAL_CL9_NAME}"
 AWS_INF_KEY = f"{AWS_SCRIPTS_PRE}/{LOCAL_INF_NAME}"
-
 
 
 # ===========================
@@ -375,7 +375,7 @@ def get_cl9(): # --cl9
         print(f"[Error] No version file found. Please run update_flashcards.py from the host device to create one")
         return 1
 
-    if save_file_from_aws(version, poin(LOCAL_VERSION_DIR, os.path.basename(version)), BUCKET_NAME, S3):
+    if get_file_s3(version, poin(LOCAL_VERSION_DIR, os.path.basename(version)), BUCKET_NAME, S3):
         print('version updated successfully.')
     else:
         print("[Error] Failed to download the latest version")
@@ -670,7 +670,7 @@ def _extract_tgz_bytes_to_dir(tgz_bytes: bytes, dest_dir: str) -> None:
             tf.extractall(dest_dir, filter="data")
 
 # ----------------------------------------------------------------
-def save_file_from_aws(aws_key: str, dest_name: str, bucket_name: str, S3) -> bool:
+def get_file_s3(aws_key: str, dest_name: str, bucket_name: str, S3) -> bool:
     """
     Simple version: directly downloads a file from AWS S3 and writes to disk.
     No atomic writes, no rollback, no temporary paths.
