@@ -35,7 +35,6 @@ from getpass import getuser
 from socket import gethostname
 from textwrap import fill
 from typing import Dict, Optional
-from uuid import uuid4
 
 
 # ===========================
@@ -56,7 +55,6 @@ else:
     PROGRAM_NAME = 'cl9'
     DEV_PC = False
 
-prefer_conda = True # if anaconda3/bin/python3 is present prefer it over python3, if False uses python3 always
 
 # ===========================
 # MARK: PATH CONST
@@ -64,7 +62,7 @@ prefer_conda = True # if anaconda3/bin/python3 is present prefer it over python3
 
 HOME =  os.path.expanduser("~")
 LOCAL_AG_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
-ALIAS_REL_PATH          = ".cl9_aliases"
+LOCAL_ALIAS_PATH        = os.path.join(HOME, '.cl9')
 LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD_4M")
 
 LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
@@ -231,101 +229,17 @@ COLOR_MAP = {
 
 
 
-
-
-
-# ===========================
-# MARK: SELECTION
-# ===========================
-
-# -----------------------------------
-def _get_fp(path:str) -> str:
-    return os.path.expanduser(f"~/{path}")
-
-# -----------------------------------------
-def _get_py() -> str:
-    conpy = _get_fp("anaconda3/bin/python3") 
-    if prefer_conda:
-        return conpy if os.path.exists(conpy) else 'python3'
-    return 'python3'
-
-
-
-
 # ===========================
 # MARK: NATIVE DISPATCH
 # ===========================
-
-
-# -------------------------------------
-def _setup_aliases() -> int:
-    """
-    Setups the aliases if they don't exist already.
-    Returns 0 if aliases already existed. Returns 1 if just created (print refresh .bashrc)
-    """
-    alias_path = _get_fp(ALIAS_REL_PATH)
-
-    py = _get_py()
-    _p = LOCAL_MAIN_DIR 
-    f_aliases: str = f"""
-
-# cl9 Aliases
-
-alias ad='{py} {_p}/add_auto.py'
-alias adt='{py} {_p}/add_tasks.py'
-alias aws='{py} {_p}/aws.py'
-alias bak='{py} {_p}/bak.py'
-alias chat='{py} {_p}/chat.py'
-alias cl9='{py} {_p}/cl9.py'
-alias cotes='{py} {_p}/cotes.py'
-alias mtl='{py} {_p}/mtl.py'
-alias mytimer='{py} {_p}/mytimer.py'
-alias rev='{py} {_p}/__main__.py'
-alias todo='{py} {_p}/todo.py'
-alias tools='{py} {_p}/tools.py'
-
-"""
-
-
-    alias_exist = False
-    if os.path.exists(alias_path):
-        with open(alias_path, 'r') as f:
-            if f_aliases == f.read():
-                alias_exist = True
-    
-    if not alias_exist:
-        with open(alias_path, 'w') as f1:
-            f1.write(f_aliases)
-    
-    bashrc_path = _get_fp(".bashrc")
-    src_cmd = f"""
-
-# Sourcing cl9 aliases
-if [[ -f {alias_path} ]]; then
-    source {alias_path}
-fi
-
-"""
-    if os.path.exists(_get_fp(".bashrc")):
-        with open(bashrc_path, 'r') as f:
-            if src_cmd not in f.read():
-                with open(bashrc_path, 'a') as f:
-                    f.write(src_cmd)
-
-    if not alias_exist:
-        return 1
-    return 0
 
 
 # ----------------------
 def get_cl9(): # --cl9
     try:
         import boto3
-        import rich
-        import prompt_toolkit
     except ModuleNotFoundError: # this simple check will make sure termux-api is installed for pasting credentials easily
-        native_reqs()
-        crint("Dependencies installed. Please run the same command again")
+        crint("Please run python3 -m pip install boto3 or dispatch --deps", 'red')
         sys.exit(0)
 
     if DEV_PC:
@@ -386,122 +300,6 @@ def get_cl9(): # --cl9
     print("\n[init] Update complete.")
     return 0
 
-
-
-
-
-
-# ===========================
-# MARK: BASH DISPATCH
-# ===========================
-
-# -----------------------------
-def launch_bash(script: str):
-    tmp_path: str = os.path.join(LOCAL_TMP_DIR, uuid4().hex) # compatible even on termux
-    try:
-        with open(tmp_path, 'w') as f:
-            f.write(script)
-
-        os.chmod(tmp_path, 0o755)
-        try:
-            subprocess.run(["bash", tmp_path], check=False)
-        except (KeyboardInterrupt, EOFError):
-            crint("Exitting safely", 'orange')
-    finally:
-        os.remove(tmp_path)
-
-
-# ----------------------------
-def native_reqs(): # --cl9
-    """
-    Requirements needed for running the flashcards script
-    """
-    py = _get_py()
-    PY_ONLY_SCRIPT = f"""
-    
-#!/bin/bash
-
-
-# FEDORA
-if command -v dnf >/dev/null 2>&1; then
-    echo "You are using dnf based platform"
-    sudo dnf install xclip || echo "failed: xclip"
-
-    echo "Ensuring and Downloading pip"
-    {py} -m ensurepip || true
-    {py} -m pip install --upgrade pip || true
-
-    echo "Installing required python third party packages"
-    {py} -m pip install prompt_toolkit rich boto3 pyperclip || true
-
-
-# TERMUX
-elif command -v pkg >/dev/null 2>&1; then
-    echo "You are using Termux"
-    pkg update -y || true
-    pkg upgrade -y || true
-    pkg install -y python || true
-    pkg install -y termux-api || true
-    
-
-    echo "Ensuring and Downloading pip"
-    {py} -m ensurepip || true   # pip upgrade forbidden on termux
-
-    echo "Installing required python third party packages"
-    {py} -m pip install prompt_toolkit rich boto3 || true
-    # pyperclip may fail on termux
-
-
-
-# Arch Linux
-elif command -v pacman >/dev/null 2>&1; then
-    echo "You are using Arch-based platform"
-    sudo pacman -S xclip || true
-
-    # ensure python + pip exist
-    sudo pacman -S --noconfirm python python-pip || true
-
-    echo "Ensuring and Downloading pip"
-    {py} -m ensurepip || true
-    {py} -m pip install --upgrade pip || true
-
-    echo "Installing required python third party packages"
-    {py} -m pip install prompt_toolkit rich boto3 pyperclip || true
-
-
-
-# UBUNTU / Debian
-elif command -v apt-get >/dev/null 2>&1; then
-    echo "You are using Ubuntu/Debian"
-    sudo apt install xclip || echo "failed: xclip"
-
-    echo "Ensuring and downloading pip"
-    {py} -m ensurepip || true
-    {py} -m pip install --upgrade pip || true
-
-    echo "Installing required python third party packages"
-    {py} -m pip install prompt_toolkit rich boto3 pyperclip || true
-
-
-
-else
-    echo "Unknown System detection: Please run update and upgrade" || true
-
-    echo "Ensuring and Downloading pip"
-    {py} -m ensurepip || true
-    {py} -m pip install --upgrade pip || true
-
-    echo "Installing required python third party packages"
-    {py} -m pip install prompt_toolkit rich boto3 || true
-    {py} -m pip install pyperclip || true  # separated because it may fail on some systems
-fi
-"""
-
-    launch_bash(PY_ONLY_SCRIPT)
-    r = _setup_aliases()
-    if r == 1:
-        print("\nPlease run source ~/.bashrc to refresh aliases")
-    return
 
 
 
@@ -607,8 +405,7 @@ def get_s3_bucket(creds: dict[str, str]):
     try:
         import boto3
     except ModuleNotFoundError:
-        crint(f"boto3 is not installed. Please install it or simply run ~/{LOCAL_MAIN_DIR}/init_flashcards.py --py. Trying automatically")
-        native_reqs()
+        crint(f"boto3 is not installed. Please install it (python3 -m pip install boto3) or simply run {LOCAL_MAIN_DIR}/dispatch.py --deps.")
         crint('Please restart', 'yellow')
         sys.exit(0)
     S3 = boto3.client(
@@ -1660,14 +1457,15 @@ def invalidate_cache():
 
 # ------------------------
 HELP_TEXT = """
-cl9 cache control tool
+cl9 
 
 Usage:
     cl9 -v        Validate/refresh cache TTL (like sudo -v)
     cl9 -i        Invalidate/delete cache
     cl9 --help    Show this help message
     cl9 --fetch   Fetches the latest verison of cl9 from the private bucket
-    cl9 --py      Installs the required third-party packages
+    cl9 --deps      Installs the required third-party packages
+    cl9 --script  Updates the ~/.cl9 script which contains essential aliases and functions
 
 Description:
 
@@ -1706,8 +1504,13 @@ def main():
     elif arg == "--fetch":
         get_cl9()
 
-    elif arg == "--py":
-        native_reqs()    
+    elif arg == "--deps" or arg == '--script':
+        try:
+            import dispatch
+            ...
+        except ModuleNotFoundError:
+            crint("Dependencies Missing. Please run cl9 --fetch")
+            sys.exit(2)
 
     else:
         print("Unknown flag.")
