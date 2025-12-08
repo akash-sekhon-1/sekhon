@@ -233,7 +233,6 @@ COLOR_MAP = {
 # MARK: NATIVE DISPATCH
 # ===========================
 
-
 # ----------------------
 def get_cl9(): # --cl9
     try:
@@ -293,6 +292,7 @@ def get_cl9(): # --cl9
 
     if get_file_s3(version, poin(LOCAL_VERSION_DIR, os.path.basename(version)), BUCKET_NAME, S3):
         print('version updated successfully.')
+        print('To install deps and aliases, Run python3 ~/cl9/m/dispatch.py --all')
     else:
         print("[Error] Failed to download the latest version")
         return 1
