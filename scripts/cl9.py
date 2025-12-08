@@ -70,6 +70,7 @@ LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
 LOCAL_JSON_DIR          = poin(LOCAL_AG_DIR, "j")
 LOCAL_TMP_DIR           = poin(LOCAL_AG_DIR, "tmp")
 LOCAL_BAK_DIR           = poin(LOCAL_AG_DIR, 'bak')
+LOCAL_SPEECH_DIR        = poin(LOCAL_AG_DIR, ".speech")
 
 # SUB DIRS
 LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
@@ -86,6 +87,7 @@ LOCAL_T_DUP_CHECK_JSON  = poin(LOCAL_JSON_DIR, "task_dup_check.json")
 LOCAL_LOG_PATH          = poin(LOCAL_JSON_DIR, "log_err.txt")
 LOCAL_CAREER_NEWS       = poin(LOCAL_JSON_DIR, "career_news.json")
 LOCAL_CREDS_PATH         = poin(LOCAL_JSON_DIR, ".creds")
+
 
 LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
 # has two keys, 'last_sync': ts and 'history': {hash: date}
@@ -105,7 +107,7 @@ VERSION_SUFFIX: str = "v.gz"
 
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR):
+for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR):
     if not os.path.exists(direc):
         os.makedirs(direc)
 
