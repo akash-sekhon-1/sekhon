@@ -126,6 +126,7 @@ AWS_REQ_KEYS = {
 AWS_SCRIPTS_PRE  = "scripts"
 AWS_JSON_PRE     = "j"
 AWS_AWS_PRE = "aws"
+AWS_SPEECH_PRE = "speech/"
 
 AWS_SUB_MAIN_PRE   = f"{AWS_JSON_PRE}/m"
 AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
