@@ -134,6 +134,7 @@ AWS_VERSION_PRE    = f"{AWS_JSON_PRE}/v" # will contain an empty file inside lik
 
 AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json.gz"
 AWS_CLIP_KEY = f"{AWS_JSON_PRE}/.clips.json.gz"
+AWS_SCHEDULE_KEY = f"{AWS_JSON_PRE}/.schedules.json.gz"
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 
