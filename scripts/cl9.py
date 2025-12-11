@@ -63,7 +63,7 @@ else:
 HOME =  os.path.expanduser("~")
 LOCAL_AG_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
 LOCAL_ALIAS_PATH        = os.path.join(HOME, '.cl9')
-LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD_4M")
+LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD/AD_4M")
 
 LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
 LOCAL_JSON_DIR          = poin(LOCAL_AG_DIR, "j")
