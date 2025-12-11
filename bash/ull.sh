@@ -26,7 +26,7 @@ CATEGORIES=(
 # Package lists per category
 # -----------------------------
 
-BASICS="xclip vim neovim gedit tilix terminator htop gparted tree curl wget zip unzip p7zip fd-find ripgrep"
+BASICS="xclip vim neovim gedit tilix terminator htop gparted tree curl wget zip unzip p7zip fd-find ripgrep libreoffice"
 
 TOOLCHAIN="gcc gcc-c++ clang clang-tools-extra llvm lld lldb libstdc++-static clang-libs"
 
