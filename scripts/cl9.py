@@ -69,6 +69,7 @@ LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
 LOCAL_JSON_DIR          = poin(LOCAL_AG_DIR, "j")
 LOCAL_TMP_DIR           = poin(LOCAL_AG_DIR, "tmp")
 LOCAL_BAK_DIR           = poin(LOCAL_AG_DIR, 'bak')
+LOCAL_MANY_DIR          = poin(HOME, 'many')
 LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
 
 # SUB DIRS
@@ -106,7 +107,7 @@ VERSION_SUFFIX: str = "v.gz"
 
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR):
+for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
     if not os.path.exists(direc):
         os.makedirs(direc)
 
@@ -127,6 +128,7 @@ AWS_SCRIPTS_PRE  = "scripts"
 AWS_JSON_PRE     = "j"
 AWS_AWS_PRE = "aws"
 AWS_SPEECH_PRE = "speech/"
+AWS_MANY_PRE = "many/" # many/n0, many/n1, ...
 
 AWS_SUB_MAIN_PRE   = f"{AWS_JSON_PRE}/m"
 AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
