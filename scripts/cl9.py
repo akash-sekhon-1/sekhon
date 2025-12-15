@@ -138,6 +138,7 @@ AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json.gz"
 AWS_CLIP_KEY = f"{AWS_JSON_PRE}/.clips.json.gz"
 AWS_SCHEDULE_KEY = f"{AWS_JSON_PRE}/.schedules.json.gz"
 AWS_NEWS_KEY = "buffers/last_career_news.txt"
+AWS_CAREER_NEWS_KEY = "buffers/career_news.json.gz"
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 
