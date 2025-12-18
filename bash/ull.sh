@@ -30,7 +30,7 @@ BASICS="xclip vim neovim gedit tilix terminator htop gparted tree curl wget zip 
 
 TOOLCHAIN="gcc gcc-c++ clang clang-tools-extra llvm lld lldb libstdc++-static clang-libs"
 
-BUILD_SYSTEMS="make cmake ninja-build meson pkgconf"
+BUILD_SYSTEMS="make cmake ninja-build meson pkgconf gh"
 
 KERNEL_TRACING="kernel-devel kernel-headers bpftool bcc bpftrace perf trace-cmd systemtap dwarves elfutils elfutils-libelf-devel elfutils-devel debuginfod debuginfod-client"
 
