@@ -1511,14 +1511,6 @@ def main():
     elif arg == "--fetch":
         get_cl9()
 
-    elif arg == "--deps" or arg == '--script':
-        try:
-            import dispatch
-            ...
-        except ModuleNotFoundError:
-            crint("Dependencies Missing. Please run cl9 --fetch")
-            sys.exit(2)
-
     else:
         print("Unknown flag.")
         print(HELP_TEXT.strip())
