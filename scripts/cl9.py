@@ -77,6 +77,7 @@ LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
 LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
 LOCAL_SUB_DELTAS_DIR    = poin(LOCAL_JSON_DIR, 'u')
 LOCAL_VERSION_DIR       = poin(LOCAL_JSON_DIR, 'v')
+LOCAL_DELTAS_CACHE_PATH = poin(LOCAL_JSON_DIR, '.deltas_cache.json.gz')
 LOCAL_OBJ_PENDING_DIR   = poin(LOCAL_JSON_DIR, 'obj_pending')
 
 # BACK UPS
@@ -638,41 +639,27 @@ def is_running() -> bool:
         return False
 
 
-# def ensure_running(_is_running: bool|None=None) -> None:
-#     """Start daemon ONLY from rev if not already running"""
-#     if _is_running is None:
-#         if is_running():
-#             return
-
-#     if _is_running:
-#         return 
-    
-#     # Clean stale socket if exists
-#     try:
-#         os.unlink(SOCK_PATH)
-#     except FileNotFoundError:
-#         pass
-
-#     subprocess.Popen(
-#         [sys.executable, DAEMON_PY_PATH],
-#         stdout=subprocess.DEVNULL,
-#         stderr=subprocess.DEVNULL,
-#         start_new_session=True
-#     )
-#     crint("Sync daemon started in background", 'green')
-def ensure_running() -> None:
-    if is_running():
+def ensure_running(_is_running: bool|None=None) -> None:
+    """Start daemon ONLY from rev if not already running"""
+    if _is_running is None:
+        if is_running():
+            return
+        
+    if _is_running:
         return
 
+    # Clean stale socket
     try:
         os.unlink(SOCK_PATH)
     except FileNotFoundError:
         pass
 
-    # TEMP: print child output
+    # Fully detach and silence the daemon
     subprocess.Popen(
         [sys.executable, DAEMON_PY_PATH],
-        # stdout=None, stderr=None  # <--- CHANGE TO THIS TO SEE ERRORS
+        stdout=subprocess.DEVNULL,   # <--- silence stdout
+        stderr=subprocess.DEVNULL,   # <--- silence stderr
+        start_new_session=True      # detach from session
     )
     crint("Sync daemon started in background", 'green')
 
