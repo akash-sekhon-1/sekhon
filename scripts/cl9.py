@@ -88,8 +88,8 @@ LOCAL_LOG_PATH          = poin(LOCAL_JSON_DIR, "log_err.txt")
 LOCAL_CAREER_NEWS       = poin(LOCAL_JSON_DIR, "career_news.json")
 LOCAL_CREDS_PATH         = poin(LOCAL_JSON_DIR, ".creds")
 LOCAL_BABEL_PATH        = poin(LOCAL_JSON_DIR, 'babel_draw.json.gz')
-LOCAL_SYNC_MARKER         = poin(LOCAL_JSON_DIR, '.sync_marker.txt') # contains the last update token
-
+LOCAL_SYNC_MARKER       = poin(LOCAL_JSON_DIR, '.sync_marker.txt') # contains the last update token
+LOCAL_S3_OBJ_CACHE      = poin(LOCAL_JSON_DIR, '.s3_obj_cache.json.gz') 
 
 LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
 # has two keys, 'last_sync': ts and 'history': {hash: date}
