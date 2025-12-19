@@ -76,6 +76,7 @@ LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
 LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
 LOCAL_SUB_DELTAS_DIR    = poin(LOCAL_JSON_DIR, 'u')
 LOCAL_VERSION_DIR       = poin(LOCAL_JSON_DIR, 'v')
+LOCAL_OBJ_PENDING_DIR   = poin(LOCAL_JSON_DIR, 'obj_pending')
 
 # BACK UPS
 LOCAL_FILES_BU_DIR      = poin(LOCAL_AG_DIR, "automated_backups/flashcards_all") # for daily backups
@@ -109,9 +110,9 @@ VERSION_SUFFIX: str = "v.gz"
 
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
-    if not os.path.exists(direc):
-        os.makedirs(direc)
+for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR, LOCAL_OBJ_PENDING_DIR):
+    if not os.path.isdir(direc):
+        os.makedirs(direc, exist_ok=True)
 
 # ===========================
 # MARK: AWS CONST
