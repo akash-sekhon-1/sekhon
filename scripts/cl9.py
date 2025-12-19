@@ -648,60 +648,51 @@ def ensure_running(_is_running: bool|None=None) -> None:
     if _is_running:
         return
 
-    # Clean stale socket
+    # Kill any stuck process
     try:
-        os.unlink(SOCK_PATH)
-    except FileNotFoundError:
+        os.system(f"fuser -k {SOCK_PATH} 2>/dev/null || true")
+    except Exception:
         pass
 
-    # Fully detach and silence the daemon
+    # Clean files
+    for path in (SOCK_PATH, PID_FILE):
+        try:
+            os.unlink(path)
+        except FileNotFoundError:
+            pass
+
     subprocess.Popen(
         [sys.executable, DAEMON_PY_PATH],
-        stdout=subprocess.DEVNULL,   # <--- silence stdout
-        stderr=subprocess.DEVNULL,   # <--- silence stderr
-        start_new_session=True      # detach from session
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True
     )
     crint("Sync daemon started in background", 'green')
 
 
 def kill_daemon() -> bool:
-    """Kill daemon — can be called from any script"""
-    if not is_running():
-        # Clean any leftover files
-        for path in (SOCK_PATH, PID_FILE):
-            try:
-                os.unlink(path)
-            except FileNotFoundError:
-                pass
-        crint("Sync daemon already dead", 'yellow')
-        return True
+    """Kill daemon — aggressive and reliable"""
+    killed = False
 
+    # Kill any process using the socket
     try:
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-            s.settimeout(1.0)
-            s.connect(SOCK_PATH)
-            s.sendall(b"shutdown")
-        time.sleep(0.8)  # give it time to die
+        os.system(f"fuser -k {SOCK_PATH} 2>/dev/null || true")
+    except Exception:
+        pass
 
-        if is_running():
-            for path in (SOCK_PATH, PID_FILE):
-                try:
-                    os.unlink(path)
-                except FileNotFoundError:
-                    pass
+    # Remove files
+    for path in (SOCK_PATH, PID_FILE):
+        try:
+            os.unlink(path)
+        except FileNotFoundError:
+            pass
 
-        crint("Sync daemon killed", 'yellow')
-        return True
+    # If socket was bound, fuser killed it
+    if os.path.exists(SOCK_PATH):
+        crint("Daemon socket was stuck — forced cleanup", 'red')
 
-    except Exception as e:
-        crint(f"Failed to kill daemon: {e}", 'red')
-        # Force cleanup
-        for path in (SOCK_PATH, PID_FILE):
-            try:
-                os.unlink(path)
-            except FileNotFoundError:
-                pass
-        return False
+    crint("Sync daemon killed and cleaned", 'yellow')
+    return True
 
 # ===========================
 # MARK: KEYCACHE
