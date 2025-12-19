@@ -26,6 +26,7 @@ import json
 import os
 import platform
 import shutil
+import socket
 import subprocess
 import sys
 import tarfile
@@ -109,8 +110,25 @@ DELTA_SUFFIX: str   = "d.gz"
 VERSION_SUFFIX: str = "v.gz"
 
 
+
+
+
+
+# ==============
+# DAEMON
+# ==============
+DAEMON_PY_PATH = poin(LOCAL_MAIN_DIR, 'daemon_sync.py')
+DAEMON_SOCK_DIR = poin(HOME, '.local', 'share', f'{PROGRAM_NAME}_daemon')
+DAEMON_SOCK_PATH = poin(DAEMON_SOCK_DIR, "daemon.sock")
+DAEMON_ETAG_PATH = poin(DAEMON_SOCK_DIR, "latest_etag.txt")
+DAEMON_PID_FILE = poin(DAEMON_SOCK_DIR, "daemon.pid")
+DAEMON_FORCE_ETAG_UPDATE = 60.0 * 10.0 # daemon must update the etags file after 10 mins
+
+
+
+
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR, LOCAL_OBJ_PENDING_DIR):
+for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR, LOCAL_OBJ_PENDING_DIR, DAEMON_SOCK_DIR):
     if not os.path.isdir(direc):
         os.makedirs(direc, exist_ok=True)
 
@@ -259,6 +277,7 @@ def get_cl9(): # --cl9
 
     __creds = get_creds()
     S3, BUCKET_NAME = get_s3_bucket(__creds)
+    kill_daemon()
 
     # backup the previous stuff first
     before_backup_path = os.path.join(
@@ -598,6 +617,103 @@ def crint(text: str, color: str='white', end='\n') -> None:
 
 
 
+# ===========================
+# MARK: DAEMON
+# ===========================
+
+DAEMON_PY_PATH = DAEMON_PY_PATH
+SOCK_PATH = DAEMON_SOCK_PATH
+PID_FILE = DAEMON_PID_FILE
+
+
+def is_running() -> bool:
+    if not os.path.exists(SOCK_PATH):
+        return False
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)
+            s.connect(SOCK_PATH)
+            return True
+    except Exception:
+        return False
+
+
+# def ensure_running(_is_running: bool|None=None) -> None:
+#     """Start daemon ONLY from rev if not already running"""
+#     if _is_running is None:
+#         if is_running():
+#             return
+
+#     if _is_running:
+#         return 
+    
+#     # Clean stale socket if exists
+#     try:
+#         os.unlink(SOCK_PATH)
+#     except FileNotFoundError:
+#         pass
+
+#     subprocess.Popen(
+#         [sys.executable, DAEMON_PY_PATH],
+#         stdout=subprocess.DEVNULL,
+#         stderr=subprocess.DEVNULL,
+#         start_new_session=True
+#     )
+#     crint("Sync daemon started in background", 'green')
+def ensure_running() -> None:
+    if is_running():
+        return
+
+    try:
+        os.unlink(SOCK_PATH)
+    except FileNotFoundError:
+        pass
+
+    # TEMP: print child output
+    subprocess.Popen(
+        [sys.executable, DAEMON_PY_PATH],
+        # stdout=None, stderr=None  # <--- CHANGE TO THIS TO SEE ERRORS
+    )
+    crint("Sync daemon started in background", 'green')
+
+
+def kill_daemon() -> bool:
+    """Kill daemon — can be called from any script"""
+    if not is_running():
+        # Clean any leftover files
+        for path in (SOCK_PATH, PID_FILE):
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+        return True
+
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(1.0)
+            s.connect(SOCK_PATH)
+            s.sendall(b"shutdown")
+        time.sleep(0.8)  # give it time to die
+
+        if is_running():
+            for path in (SOCK_PATH, PID_FILE):
+                try:
+                    os.unlink(path)
+                except FileNotFoundError:
+                    pass
+
+        crint("Sync daemon killed", 'yellow')
+        return True
+
+    except Exception as e:
+        crint(f"Failed to kill daemon: {e}", 'red')
+        # Force cleanup
+        for path in (SOCK_PATH, PID_FILE):
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+        return False
 
 # ===========================
 # MARK: KEYCACHE
@@ -1476,8 +1592,8 @@ Usage:
     cl9 -i        Invalidate/delete cache
     cl9 --help    Show this help message
     cl9 --fetch   Fetches the latest verison of cl9 from the private bucket
-    cl9 --deps      Installs the required third-party packages
-    cl9 --script  Updates the ~/.cl9 script which contains essential aliases and functions
+    cl9 -kd         Kills the daemon
+    cl9 -ed         Starts the daemon if not already running
 
 Description:
 
@@ -1515,6 +1631,12 @@ def main():
 
     elif arg == "--fetch":
         get_cl9()
+
+    elif arg == "-kd":
+        kill_daemon()
+
+    elif arg == "-ed":
+        ensure_running()
 
     else:
         print("Unknown flag.")
