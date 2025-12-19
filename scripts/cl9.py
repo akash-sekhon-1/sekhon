@@ -686,6 +686,7 @@ def kill_daemon() -> bool:
                 os.unlink(path)
             except FileNotFoundError:
                 pass
+        crint("Sync daemon already dead", 'yellow')
         return True
 
     try:
