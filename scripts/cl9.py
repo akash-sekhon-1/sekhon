@@ -251,12 +251,6 @@ COLOR_MAP = {
 
 # ----------------------
 def get_cl9(): # --cl9
-    try:
-        import boto3
-    except ModuleNotFoundError: # this simple check will make sure termux-api is installed for pasting credentials easily
-        crint("Please run python3 -m pip install boto3 or dispatch --deps", 'red')
-        sys.exit(0)
-
     if DEV_PC:
         crint("This operation is not allowed on the DEV MODE", 'red')
         return 0
