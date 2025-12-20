@@ -78,7 +78,7 @@ LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
 LOCAL_SUB_DELTAS_DIR    = poin(LOCAL_JSON_DIR, 'u')
 LOCAL_VERSION_DIR       = poin(LOCAL_JSON_DIR, 'v')
 LOCAL_DELTAS_CACHE_PATH = poin(LOCAL_JSON_DIR, '.deltas_cache.json.gz')
-LOCAL_JSON_CACHE_PATH  = poin(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
+LOCAL_MAIN_CACHE_PATH  = poin(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
 LOCAL_OBJ_PENDING_DIR   = poin(LOCAL_JSON_DIR, 'obj_pending')
 
 # BACK UPS
