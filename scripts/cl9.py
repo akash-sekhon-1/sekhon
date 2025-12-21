@@ -77,9 +77,7 @@ LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
 LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
 LOCAL_SUB_DELTAS_DIR    = poin(LOCAL_JSON_DIR, 'u')
 LOCAL_VERSION_DIR       = poin(LOCAL_JSON_DIR, 'v')
-LOCAL_DELTAS_CACHE_PATH = poin(LOCAL_JSON_DIR, '.deltas_cache.json.gz')
 LOCAL_MAIN_CACHE_PATH  = poin(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
-LOCAL_OBJ_PENDING_DIR   = poin(LOCAL_JSON_DIR, 'obj_pending')
 
 # BACK UPS
 LOCAL_FILES_BU_DIR      = poin(LOCAL_AG_DIR, "automated_backups/flashcards_all") # for daily backups
@@ -92,8 +90,6 @@ LOCAL_LOG_PATH          = poin(LOCAL_JSON_DIR, "log_err.txt")
 LOCAL_CAREER_NEWS       = poin(LOCAL_JSON_DIR, "career_news.json")
 LOCAL_CREDS_PATH         = poin(LOCAL_JSON_DIR, ".creds")
 LOCAL_BABEL_PATH        = poin(LOCAL_JSON_DIR, 'babel_draw.json.gz')
-LOCAL_SYNC_MARKER       = poin(LOCAL_JSON_DIR, '.sync_marker.txt') # contains the last update token
-LOCAL_S3_OBJ_CACHE      = poin(LOCAL_JSON_DIR, '.s3_obj_cache.json.gz') 
 
 LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
 # has two keys, 'last_sync': ts and 'history': {hash: date}
@@ -114,7 +110,7 @@ VERSION_SUFFIX: str = "v.gz"
 
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR, LOCAL_OBJ_PENDING_DIR):
+for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
     if not os.path.isdir(direc):
         os.makedirs(direc, exist_ok=True)
 
@@ -144,7 +140,6 @@ AWS_VERSION_PRE    = f"{AWS_JSON_PRE}/v" # will contain an empty file inside lik
 AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json.gz"
 AWS_CLIP_KEY = f"{AWS_JSON_PRE}/.clips.json.gz"
 AWS_SCHEDULE_KEY = f"{AWS_JSON_PRE}/.schedules.json.gz"
-AWS_SYNC_MARKER         = f"{AWS_JSON_PRE}/.sync_marker.txt" # contains the last update token
 
 AWS_NEWS_KEY = "buffers/last_career_news.txt"
 AWS_CAREER_NEWS_KEY = "buffers/career_news.json.gz"
