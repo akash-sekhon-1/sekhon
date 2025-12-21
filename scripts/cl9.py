@@ -26,7 +26,6 @@ import json
 import os
 import platform
 import shutil
-import socket
 import subprocess
 import sys
 import tarfile
