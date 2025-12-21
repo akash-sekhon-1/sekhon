@@ -325,8 +325,9 @@ def getclip() -> Optional[str]:
     Robust clipboard getter.
     Priority:
         1. pyperclip.paste
-        2. xclip (subprocess)
-        3. termux-clipboard-get (Termux)
+        2. tmux (if running in tmux)
+        3. xclip (subprocess)
+        4. termux-clipboard-get (Termux)
     Returns:
         str on success,
         None on failure.
@@ -342,7 +343,24 @@ def getclip() -> Optional[str]:
     except Exception:
         pass
 
-    # 2. xclip
+    # 2. tmux (if running in tmux)
+    if 'TMUX' in os.environ:
+        tmux_bin = shutil.which("tmux")
+        if tmux_bin:
+            try:
+                # show-buffer outputs the latest (top) buffer
+                proc = subprocess.run(
+                    [tmux_bin, "show-buffer"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    check=False
+                )
+                if proc.returncode == 0:
+                    return proc.stdout.decode(errors="replace")
+            except Exception:
+                pass
+
+    # 3. xclip
     xclip_bin = shutil.which("xclip")
     if xclip_bin:
         try:
@@ -357,7 +375,7 @@ def getclip() -> Optional[str]:
         except Exception:
             pass
 
-    # 3. Termux
+    # 4. Termux
     termux_bin = shutil.which("termux-clipboard-get")
     if termux_bin:
         try:
@@ -372,7 +390,7 @@ def getclip() -> Optional[str]:
         except Exception:
             pass
 
-    # 4. Total failure
+    # 5. Total failure
     return None
 
 
