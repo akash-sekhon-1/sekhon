@@ -61,14 +61,14 @@ else:
 # ===========================
 
 HOME =  os.path.expanduser("~")
-LOCAL_AG_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
+LOCAL_CL9_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
 LOCAL_ALIAS_PATH        = os.path.join(HOME, '.cl9')
 LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD/AD_4M")
 
-LOCAL_MAIN_DIR          = poin(LOCAL_AG_DIR, "m")
-LOCAL_JSON_DIR          = poin(LOCAL_AG_DIR, "j")
-LOCAL_TMP_DIR           = poin(LOCAL_AG_DIR, "tmp")
-LOCAL_BAK_DIR           = poin(LOCAL_AG_DIR, 'bak')
+LOCAL_MAIN_DIR          = poin(LOCAL_CL9_DIR, "m")
+LOCAL_JSON_DIR          = poin(LOCAL_CL9_DIR, "j")
+LOCAL_TMP_DIR           = poin(LOCAL_CL9_DIR, "tmp")
+LOCAL_BAK_DIR           = poin(LOCAL_CL9_DIR, 'bak')
 LOCAL_MANY_DIR          = poin(HOME, 'many')
 LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
 
@@ -79,8 +79,8 @@ LOCAL_VERSION_DIR       = poin(LOCAL_JSON_DIR, 'v')
 LOCAL_MAIN_CACHE_PATH  = poin(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
 
 # BACK UPS
-LOCAL_FILES_BU_DIR      = poin(LOCAL_AG_DIR, "automated_backups/flashcards_all") # for daily backups
-LOCAL_SCRIPTS_BU_DIR    = poin(LOCAL_AG_DIR, "automated_backups/scripts") # for backup before init
+LOCAL_FILES_BU_DIR      = poin(LOCAL_CL9_DIR, "automated_backups/flashcards_all") # for daily backups
+LOCAL_SCRIPTS_BU_DIR    = poin(LOCAL_CL9_DIR, "automated_backups/scripts") # for backup before init
 
 # OTHERS
 LOCAL_DUP_CHECK_JSON    = poin(LOCAL_JSON_DIR, "duplication_check_file.json")
@@ -109,7 +109,7 @@ VERSION_SUFFIX: str = "v.gz"
 
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_AG_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
+for direc in (LOCAL_CL9_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
     if not os.path.isdir(direc):
         os.makedirs(direc, exist_ok=True)
 
@@ -310,18 +310,21 @@ def get_cl9(): # --cl9
 
 
 # ===========================
-# MARK: INPUT
+# MARK: INPUT/CLIP
 # ===========================
 
 # -----------------------------
-def getclip() -> Optional[str]:
+def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]:
     """
     Robust clipboard getter.
     Priority:
-        1. pyperclip.paste
-        2. tmux (if running in tmux)
-        3. xclip (subprocess)
+    Priority:
+        1. pyperclip.copy
+        2. wl-paste
+        3. xclip
         4. termux-clipboard-get (Termux)
+        5. pbpaste (for Mac OS)
+        6. tmux (if running in tmux)
     Returns:
         str on success,
         None on failure.
@@ -330,32 +333,36 @@ def getclip() -> Optional[str]:
 
     # 1. pyperclip
     try:
-        import pyperclip
-        data = pyperclip.paste()
-        # pyperclip returns '' on empty clipboard, treat as success
+        import pyperclip 
+        data = pyperclip.paste() 
+        if debug:
+            print("Using Native Pyperclip")
         return data if isinstance(data, str) else None
     except Exception:
         pass
 
-    # 2. tmux (if running in tmux)
-    if 'TMUX' in os.environ:
-        tmux_bin = shutil.which("tmux")
-        if tmux_bin:
-            try:
-                # show-buffer outputs the latest (top) buffer
-                proc = subprocess.run(
-                    [tmux_bin, "show-buffer"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    check=False
-                )
-                if proc.returncode == 0:
-                    return proc.stdout.decode(errors="replace")
-            except Exception:
-                pass
+
+
+    # 2. wl-paste
+    wlpaste_bin = shutil.which("wl-paste") 
+    if wlpaste_bin:
+        try:
+            proc = subprocess.run(
+                [wlpaste_bin],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                check=False
+            )
+            if proc.returncode == 0:
+                if debug:
+                    print("using wl-paste")
+                return proc.stdout.decode(errors="replace")
+        except Exception:
+            pass
+
 
     # 3. xclip
-    xclip_bin = shutil.which("xclip")
+    xclip_bin = shutil.which("xclip") 
     if xclip_bin:
         try:
             proc = subprocess.run(
@@ -365,6 +372,8 @@ def getclip() -> Optional[str]:
                 check=False
             )
             if proc.returncode == 0:
+                if debug:
+                    print("using xclip")
                 return proc.stdout.decode(errors="replace")
         except Exception:
             pass
@@ -380,11 +389,55 @@ def getclip() -> Optional[str]:
                 check=False
             )
             if proc.returncode == 0:
+                if debug:
+                    print("using termux get")
                 return proc.stdout.decode(errors="replace")
         except Exception:
             pass
 
-    # 5. Total failure
+    # 5. Mac OS
+    pbpaste_bin = shutil.which("pbpaste")
+    if pbpaste_bin:
+        try:
+            proc = subprocess.run(
+                [pbpaste_bin],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                check=False
+            )
+            if proc.returncode == 0:
+                if debug:
+                    print("Using pbpaste")
+                return proc.stdout.decode(errors="replace")
+        except Exception:
+            pass
+
+
+    # 6. tmux (if running in tmux tty, last fallback) 
+    if 'TMUX' in os.environ:
+        tmux_bin = shutil.which("tmux")
+        if tmux_bin:
+            try:
+                # show-buffer outputs the latest (top) buffer
+                proc = subprocess.run(
+                    [tmux_bin, "show-buffer"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    check=False
+                )
+                if proc.returncode == 0:
+                    if debug:
+                        print("using TMUX")
+                    if warn_tty:
+                        print("Pasted from tmux load-buffer")
+                    return proc.stdout.decode(errors="replace")
+            except Exception:
+                pass
+
+
+    # 7. Total failure
+    if debug:
+        print("Total Failure")
     return None
 
 
