@@ -42,7 +42,8 @@ from typing import Dict, Optional
 # ===========================
 poin = os.path.join
 PC_login_name: str = "akash@n0"
-login_name: str = f"{getuser()}@{gethostname()}" # fast wifi PC where compaction happens automatically
+HOSTNAME = gethostname()
+login_name: str = f"{getuser()}@{HOSTNAME}" # fast wifi PC where compaction happens automatically
 MAIN_PC: bool = PC_login_name == login_name
 HOME: str = os.path.expanduser("~")
 
