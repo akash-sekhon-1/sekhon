@@ -107,7 +107,9 @@ MAIN_SUFFIX: str    = "m.gz"
 DELTA_SUFFIX: str   = "d.gz"
 VERSION_SUFFIX: str = "v.gz"
 
-
+IS_TERMUX = "com.termux" in HOME
+LOCAL_TERMUX_REC_DIR = poin(HOME, 'storage', 'music', 'Recordings')
+LOCAL_TERMUX_ST_REC_DIR = poin(LOCAL_TERMUX_REC_DIR, 'Standard Recordings')
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
 for direc in (LOCAL_CL9_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
