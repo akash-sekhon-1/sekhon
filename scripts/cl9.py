@@ -490,7 +490,7 @@ def get_s3_bucket(creds: dict[str, str]):
         "s3",
         aws_access_key_id     = creds["PRIVATE_AWS_ACCESS_KEY_ID"],
         aws_secret_access_key = creds["PRIVATE_AWS_SECRET_ACCESS_KEY"],
-        region_name           = creds["PRIVATE_BUCKET_REGION"],
+        region_name           = creds["PRIVATE_BUCKET_REGION"]
     )
     return S3, creds["PRIVATE_BUCKET_NAME"]
 
