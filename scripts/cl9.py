@@ -40,7 +40,9 @@ from typing import Dict, Optional
 # ===========================
 # GLOBAL
 # ===========================
-poin = os.path.join
+DELTA_VERSION: str = "2.1.1"
+
+path_join = os.path.join
 PC_login_name: str = "akash@n0"
 HOSTNAME = gethostname()
 login_name: str = f"{getuser()}@{HOSTNAME}" # fast wifi PC where compaction happens automatically
@@ -48,7 +50,7 @@ MAIN_PC: bool = PC_login_name == login_name
 HOME: str = os.path.expanduser("~")
 
 
-if MAIN_PC and os.path.exists(poin(HOME, "cl9_dev")) and os.path.abspath(os.path.relpath(__file__)) == poin(HOME, "cl9_dev/m/cl9.py"):
+if MAIN_PC and os.path.exists(path_join(HOME, "cl9_dev")) and os.path.abspath(os.path.relpath(__file__)) == path_join(HOME, "cl9_dev/m/cl9.py"):
     print("DEVELOPMENT MODE ON")
     PROGRAM_NAME = 'cl9_dev'
     DEV_PC = True
@@ -66,41 +68,42 @@ LOCAL_CL9_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
 LOCAL_ALIAS_PATH        = os.path.join(HOME, '.cl9')
 LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD/AD_4M")
 
-LOCAL_MAIN_DIR          = poin(LOCAL_CL9_DIR, "m")
-LOCAL_JSON_DIR          = poin(LOCAL_CL9_DIR, "j")
-LOCAL_TMP_DIR           = poin(LOCAL_CL9_DIR, "tmp")
-LOCAL_BAK_DIR           = poin(LOCAL_CL9_DIR, 'bak')
-LOCAL_MANY_DIR          = poin(HOME, 'many')
-LOCAL_SPEECH_DIR        = poin(HOME, '.cache', 'cl9', 'speech')
+LOCAL_MAIN_DIR          = path_join(LOCAL_CL9_DIR, "m")
+LOCAL_JSON_DIR          = path_join(LOCAL_CL9_DIR, "j")
+LOCAL_TMP_DIR           = path_join(LOCAL_CL9_DIR, "tmp")
+LOCAL_BAK_DIR           = path_join(LOCAL_CL9_DIR, 'bak')
+LOCAL_MANY_DIR          = path_join(HOME, 'many')
+LOCAL_SPEECH_DIR        = path_join(HOME, '.cache', 'cl9', 'speech')
 
 # SUB DIRS
-LOCAL_SUB_MAIN_DIR      = poin(LOCAL_JSON_DIR, 'm')
-LOCAL_SUB_DELTAS_DIR    = poin(LOCAL_JSON_DIR, 'u')
-LOCAL_VERSION_DIR       = poin(LOCAL_JSON_DIR, 'v')
-LOCAL_MAIN_CACHE_PATH  = poin(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
+LOCAL_SUB_MAIN_DIR      = path_join(LOCAL_JSON_DIR, 'm')
+LOCAL_SUB_DELTAS_DIR    = path_join(LOCAL_JSON_DIR, 'u')
+LOCAL_VERSION_DIR       = path_join(LOCAL_JSON_DIR, 'v')
+LOCAL_MAIN_CACHE_PATH  = path_join(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
+LOCAL_PENDING_DIR = path_join(LOCAL_JSON_DIR, 'p')
 
 # BACK UPS
-LOCAL_FILES_BU_DIR      = poin(LOCAL_CL9_DIR, "automated_backups/flashcards_all") # for daily backups
-LOCAL_SCRIPTS_BU_DIR    = poin(LOCAL_CL9_DIR, "automated_backups/scripts") # for backup before init
+LOCAL_FILES_BU_DIR      = path_join(LOCAL_CL9_DIR, "automated_backups/flashcards_all") # for daily backups
+LOCAL_SCRIPTS_BU_DIR    = path_join(LOCAL_CL9_DIR, "automated_backups/scripts") # for backup before init
 
 # OTHERS
-LOCAL_DUP_CHECK_JSON    = poin(LOCAL_JSON_DIR, "duplication_check_file.json")
-LOCAL_T_DUP_CHECK_JSON  = poin(LOCAL_JSON_DIR, "task_dup_check.json")
-LOCAL_LOG_PATH          = poin(LOCAL_JSON_DIR, "log_err.txt")
-LOCAL_CAREER_NEWS       = poin(LOCAL_JSON_DIR, "career_news.json")
-LOCAL_CREDS_PATH         = poin(LOCAL_JSON_DIR, ".creds")
-LOCAL_BABEL_PATH        = poin(LOCAL_JSON_DIR, 'babel_draw.json.gz')
+LOCAL_DUP_CHECK_JSON    = path_join(LOCAL_JSON_DIR, "duplication_check_file.json")
+LOCAL_T_DUP_CHECK_JSON  = path_join(LOCAL_JSON_DIR, "task_dup_check.json")
+LOCAL_LOG_PATH          = path_join(LOCAL_JSON_DIR, "log_err.txt")
+LOCAL_CAREER_NEWS       = path_join(LOCAL_JSON_DIR, "career_news.json")
+LOCAL_CREDS_PATH         = path_join(LOCAL_JSON_DIR, ".creds")
+LOCAL_BABEL_PATH        = path_join(LOCAL_JSON_DIR, 'babel_draw.json.gz')
 
-LOCAL_TEXT_HISTORY =    poin(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
+LOCAL_TEXT_HISTORY =    path_join(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 # PUBLIC
 LOCAL_CL9_NAME = 'cl9.py'
 LOCAL_INF_NAME = 'inf.py'
 
-LOCAL_CL9_PATH = poin(LOCAL_MAIN_DIR, LOCAL_CL9_NAME)
-LOCAL_INF_PATH = poin(LOCAL_MAIN_DIR, LOCAL_INF_NAME)
-LOCAL_BASH_DIR = poin(LOCAL_MAIN_DIR, 'bash')
+LOCAL_CL9_PATH = path_join(LOCAL_MAIN_DIR, LOCAL_CL9_NAME)
+LOCAL_INF_PATH = path_join(LOCAL_MAIN_DIR, LOCAL_INF_NAME)
+LOCAL_BASH_DIR = path_join(LOCAL_MAIN_DIR, 'bash')
 
 
 MAIN_SUFFIX: str    = "m.gz"
@@ -108,11 +111,11 @@ DELTA_SUFFIX: str   = "d.gz"
 VERSION_SUFFIX: str = "v.gz"
 
 IS_TERMUX = "com.termux" in HOME
-LOCAL_TERMUX_REC_DIR = poin(HOME, 'storage', 'music', 'Recordings')
-LOCAL_TERMUX_ST_REC_DIR = poin(LOCAL_TERMUX_REC_DIR, 'Standard Recordings')
+LOCAL_TERMUX_REC_DIR = path_join(HOME, 'storage', 'music', 'Recordings')
+LOCAL_TERMUX_ST_REC_DIR = path_join(LOCAL_TERMUX_REC_DIR, 'Standard Recordings')
 
 # two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_CL9_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR):
+for direc in (LOCAL_CL9_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR, LOCAL_PENDING_DIR):
     if not os.path.isdir(direc):
         os.makedirs(direc, exist_ok=True)
 
@@ -297,7 +300,7 @@ def get_cl9(): # --cl9
         print(f"[Error] No version file found. Please run update_flashcards.py from the host device to create one")
         return 1
 
-    if get_file_s3(version, poin(LOCAL_VERSION_DIR, os.path.basename(version)), BUCKET_NAME, S3):
+    if get_file_s3(version, path_join(LOCAL_VERSION_DIR, os.path.basename(version)), BUCKET_NAME, S3):
         print('version updated successfully.')
         print('To install deps and aliases, Run python3 ~/cl9/m/dispatch.py --all')
     else:
