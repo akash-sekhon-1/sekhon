@@ -295,7 +295,7 @@ def get_cl9(): # --cl9
     if len(versions) == 1: # usual case
         version = versions[0]
     elif len(versions) > 1:
-        version = max(versions, key=lambda x: float(x.remove_suffix(VERSION_SUFFIX)))
+        version = max(versions, key=lambda x: float(x.removeprefix('v').split('_')[0]))
     else:
         print(f"[Error] No version file found. Please run update_flashcards.py from the host device to create one")
         return 1
