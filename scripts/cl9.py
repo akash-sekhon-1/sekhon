@@ -1662,6 +1662,7 @@ def main():
 
     elif arg == "--online":
         make_online()
+        crint("cl9 is online now. Type rev --sync to sync", 'green')
 
     else:
         print("Unknown flag.")
