@@ -93,6 +93,7 @@ LOCAL_LOG_PATH          = path_join(LOCAL_JSON_DIR, "log_err.txt")
 LOCAL_CAREER_NEWS       = path_join(LOCAL_JSON_DIR, "career_news.json")
 LOCAL_CREDS_PATH         = path_join(LOCAL_JSON_DIR, ".creds")
 LOCAL_BABEL_PATH        = path_join(LOCAL_JSON_DIR, 'babel_draw.json.gz')
+LOCAL_MAKE_OFFLINE_PATH = path_join(LOCAL_JSON_DIR, '.make_offline.txt')
 
 LOCAL_TEXT_HISTORY =    path_join(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
 # has two keys, 'last_sync': ts and 'history': {hash: date}
@@ -165,7 +166,8 @@ TIME_FMT: str = "%Y-%m-%d_%H:%M:%S"
 DATE_FMT: str = "%Y-%m-%d"
 MONTH_FMT: str = '%Y-%m'
 
-
+OFFLINE_DEFAULT_DURATION: float = 2.0 * 3600.0 # seconds
+OFFLINE_MAX_DURATION: float = 24.0 * 3600.0 # seconds
 
 # ===========================
 # MARK: CRYPTO CONST
@@ -1534,6 +1536,58 @@ def invalidate_cache():
 
 
 
+def _write_offline_file(new_ts: float):
+    with open(LOCAL_MAKE_OFFLINE_PATH, 'w') as f:
+        f.write(str(new_ts))
+
+
+def make_offline(hours: str|float|int = 2, verbose: bool = True):
+    try:
+        hours = float(hours)
+        seconds = hours * 3600.0
+    except ValueError:
+        seconds = OFFLINE_DEFAULT_DURATION
+
+    seconds = min(seconds, OFFLINE_MAX_DURATION)
+    new_ts: float = time.time() + seconds
+    _write_offline_file(new_ts)
+    if verbose:
+        crint(f"cl9 made offline for {seconds/3600:.1f} hours")
+    return
+
+
+def make_online():
+    now = time.time()
+    _write_offline_file(now)
+
+
+def is_offline(verbose: bool = True):
+    if not os.path.isfile(LOCAL_MAKE_OFFLINE_PATH):
+        return False
+    
+    try:
+        with open(LOCAL_MAKE_OFFLINE_PATH, 'r') as f:
+            end_ts = float(f.read().strip())
+    except Exception as e:
+        os.remove(LOCAL_MAKE_OFFLINE_PATH)
+        if verbose:
+            crint(f"An Exception occurred: {e}", 'red')
+        return False
+    
+    now = time.time()
+    if end_ts > now:
+        if end_ts > now + OFFLINE_MAX_DURATION:
+            end_ts = now + OFFLINE_MAX_DURATION
+            _write_offline_file(end_ts)
+        if verbose:
+            crint(f"Offline Mode will end in {(end_ts-now)/3600:.1f} Hours", 'yellow')
+        return True
+    return False
+    
+
+
+
+
 # ------------------------
 HELP_TEXT = """
 cl9 
@@ -1543,6 +1597,9 @@ Usage:
     cl9 -i        Invalidate/delete cache
     cl9 --help    Show this help message
     cl9 --fetch   Fetches the latest verison of cl9 from the private bucket
+
+    cl9 --offline [hours]   Makes the device offline for default 2 hours
+    cl9 --online            Makes the device online again
     
 Description:
 
@@ -1560,7 +1617,7 @@ Description:
 
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print(HELP_TEXT.strip())
         sys.exit(1)
 
@@ -1580,6 +1637,16 @@ def main():
 
     elif arg == "--fetch":
         get_cl9()
+
+    elif arg == "--offline":
+        if len(sys.argv) >=3:
+            hours = sys.argv[2]
+            make_offline(hours)
+        else:
+            make_offline()
+
+    elif arg == "--online":
+        make_online()
 
     else:
         print("Unknown flag.")
