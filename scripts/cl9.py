@@ -1561,8 +1561,19 @@ def make_online():
     _write_offline_file(now)
 
 
+
+__OFFLINE_DICT = {"offline": None, "offline_end_ts": 0.0}
 def is_offline(verbose: bool = True):
+    off_dict = __OFFLINE_DICT
+    
+    if off_dict["offline"] is not None:
+        if verbose and off_dict["offline"]:
+            end_hours = max(0.0, (off_dict["offline_end_ts"] - time.time())/3600.0)
+            crint(f"Offline Mode will end in {end_hours:.1f} Hours", 'yellow')
+        return off_dict["offline"]
+    
     if not os.path.isfile(LOCAL_MAKE_OFFLINE_PATH):
+        off_dict["offline"] = False
         return False
     
     try:
@@ -1572,8 +1583,9 @@ def is_offline(verbose: bool = True):
         os.remove(LOCAL_MAKE_OFFLINE_PATH)
         if verbose:
             crint(f"An Exception occurred: {e}", 'red')
+        off_dict["offline"] = False
         return False
-    
+
     now = time.time()
     if end_ts > now:
         if end_ts > now + OFFLINE_MAX_DURATION:
@@ -1581,9 +1593,12 @@ def is_offline(verbose: bool = True):
             _write_offline_file(end_ts)
         if verbose:
             crint(f"Offline Mode will end in {(end_ts-now)/3600:.1f} Hours", 'yellow')
+        off_dict["offline_end_ts"] = end_ts
+        off_dict["offline"] = True
         return True
-    return False
     
+    off_dict["offline"] = False
+    return False
 
 
 
