@@ -14,6 +14,7 @@ cl9.py
 # IMPORTS
 # ===========================
 
+import argparse
 import base64
 import ctypes
 import ctypes.util
@@ -32,9 +33,19 @@ import tarfile
 import tempfile
 import time
 from getpass import getuser
+from pathlib import Path
 from socket import gethostname
 from textwrap import fill
-from typing import Dict, Optional
+from typing import Dict, NewType, Optional
+
+
+
+
+
+# annotate
+S3Key = NewType("S3Key", str)
+
+
 
 
 # ===========================
@@ -42,15 +53,18 @@ from typing import Dict, Optional
 # ===========================
 DELTA_VERSION: str = "2.1.1"
 
-path_join = os.path.join
-PC_login_name: str = "akash@n0"
-HOSTNAME = gethostname()
-login_name: str = f"{getuser()}@{HOSTNAME}" # fast wifi PC where compaction happens automatically
-MAIN_PC: bool = PC_login_name == login_name
-HOME: str = os.path.expanduser("~")
+PC_LOGIN_NAME: str = "akash@n0"
+HOSTNAME: str = gethostname()
+LOGIN_NAME: str = f"{getuser()}@{HOSTNAME}" # fast wifi PC where compaction happens automatically
+
+MAIN_PC: bool = PC_LOGIN_NAME == LOGIN_NAME
+HOME: Path = Path.home()
 
 
-if MAIN_PC and os.path.exists(path_join(HOME, "cl9_dev")) and os.path.abspath(os.path.relpath(__file__)) == path_join(HOME, "cl9_dev/m/cl9.py"):
+THIS_FILE = Path(__file__).resolve()
+DEV_ROOT = HOME / "cl9_dev" / "m" / "cl9.py"
+
+if MAIN_PC and (HOME / "cl9_dev").exists() and THIS_FILE == DEV_ROOT:
     print("DEVELOPMENT MODE ON")
     PROGRAM_NAME = 'cl9_dev'
     DEV_PC = True
@@ -58,67 +72,111 @@ else:
     PROGRAM_NAME = 'cl9'
     DEV_PC = False
 
+try:
+    CPU_COUNT: int = os.cpu_count() or 10
+except:
+    CPU_COUNT: int = 10
+
+
 
 # ===========================
 # MARK: PATH CONST
 # ===========================
 
-HOME =  os.path.expanduser("~")
-LOCAL_CL9_DIR            = os.path.expanduser(f"~/{PROGRAM_NAME}")
-LOCAL_ALIAS_PATH        = os.path.join(HOME, '.cl9')
-LOCAL_DUSTBIN           = os.path.expanduser(f"~/AD/AD_4M")
-
-LOCAL_MAIN_DIR          = path_join(LOCAL_CL9_DIR, "m")
-LOCAL_JSON_DIR          = path_join(LOCAL_CL9_DIR, "j")
-LOCAL_TMP_DIR           = path_join(LOCAL_CL9_DIR, "tmp")
-LOCAL_BAK_DIR           = path_join(LOCAL_CL9_DIR, 'bak')
-LOCAL_MANY_DIR          = path_join(HOME, 'many')
-LOCAL_SPEECH_DIR        = path_join(HOME, '.cache', 'cl9', 'speech')
-
-# SUB DIRS
-LOCAL_SUB_MAIN_DIR      = path_join(LOCAL_JSON_DIR, 'm')
-LOCAL_SUB_DELTAS_DIR    = path_join(LOCAL_JSON_DIR, 'u')
-LOCAL_VERSION_DIR       = path_join(LOCAL_JSON_DIR, 'v')
-LOCAL_MAIN_CACHE_PATH  = path_join(LOCAL_JSON_DIR, '.all_json_cache.json.gz')
-LOCAL_PENDING_DIR = path_join(LOCAL_JSON_DIR, 'p')
-
-# BACK UPS
-LOCAL_FILES_BU_DIR      = path_join(LOCAL_CL9_DIR, "automated_backups/flashcards_all") # for daily backups
-LOCAL_SCRIPTS_BU_DIR    = path_join(LOCAL_CL9_DIR, "automated_backups/scripts") # for backup before init
-
-# OTHERS
-LOCAL_DUP_CHECK_JSON    = path_join(LOCAL_JSON_DIR, "duplication_check_file.json")
-LOCAL_T_DUP_CHECK_JSON  = path_join(LOCAL_JSON_DIR, "task_dup_check.json")
-LOCAL_LOG_PATH          = path_join(LOCAL_JSON_DIR, "log_err.txt")
-LOCAL_CAREER_NEWS       = path_join(LOCAL_JSON_DIR, "career_news.json")
-LOCAL_CREDS_PATH         = path_join(LOCAL_JSON_DIR, ".creds")
-LOCAL_BABEL_PATH        = path_join(LOCAL_JSON_DIR, 'babel_draw.json.gz')
-LOCAL_MAKE_OFFLINE_PATH = path_join(LOCAL_JSON_DIR, '.make_offline.txt')
-
-LOCAL_TEXT_HISTORY =    path_join(LOCAL_JSON_DIR, ".text_history.json.gz") # THIS path is also mentioned in ins_adder.py (not imported to keep that fast)
-# has two keys, 'last_sync': ts and 'history': {hash: date}
-
-# PUBLIC
-LOCAL_CL9_NAME = 'cl9.py'
-LOCAL_INF_NAME = 'inf.py'
-
-LOCAL_CL9_PATH = path_join(LOCAL_MAIN_DIR, LOCAL_CL9_NAME)
-LOCAL_INF_PATH = path_join(LOCAL_MAIN_DIR, LOCAL_INF_NAME)
-LOCAL_BASH_DIR = path_join(LOCAL_MAIN_DIR, 'bash')
+# Root
+LOCAL_CL9_DIR           = HOME / PROGRAM_NAME
+LOCAL_ALIAS_PATH        = HOME / ".cl9"
+LOCAL_DUSTBIN           = HOME / "AD" / "AD_4M"
 
 
-MAIN_SUFFIX: str    = "m.gz"
-DELTA_SUFFIX: str   = "d.gz"
-VERSION_SUFFIX: str = "v.gz"
+# Core SubDir
+LOCAL_MAIN_DIR    = LOCAL_CL9_DIR / "m"
+LOCAL_JSON_DIR    = LOCAL_CL9_DIR / "j"
+LOCAL_TMP_DIR     = LOCAL_CL9_DIR / "tmp"
+LOCAL_BAK_DIR     = LOCAL_CL9_DIR / "bak"
 
-IS_TERMUX = "com.termux" in HOME
-LOCAL_TERMUX_REC_DIR = path_join(HOME, 'storage', 'music', 'Recordings')
-LOCAL_TERMUX_ST_REC_DIR = path_join(LOCAL_TERMUX_REC_DIR, 'Standard Recordings')
 
-# two stat(2) + mkdir(2) calls if doesn't exist, else only 1 stat(2) call, thus optimal when direc mostly exists
-for direc in (LOCAL_CL9_DIR, LOCAL_JSON_DIR, LOCAL_FILES_BU_DIR, LOCAL_SCRIPTS_BU_DIR, LOCAL_MAIN_DIR, LOCAL_SUB_MAIN_DIR, LOCAL_VERSION_DIR, LOCAL_SUB_DELTAS_DIR, LOCAL_TMP_DIR, LOCAL_BAK_DIR, LOCAL_SPEECH_DIR, LOCAL_MANY_DIR, LOCAL_PENDING_DIR):
-    if not os.path.isdir(direc):
-        os.makedirs(direc, exist_ok=True)
+# non-cl9 roots
+LOCAL_MANY_DIR    = HOME / "many"
+LOCAL_SPEECH_DIR  = HOME / ".cache" / "cl9" / "speech"
+
+
+# Bases
+LOCAL_BASES_DIR   = LOCAL_JSON_DIR / "b"
+LOCAL_MAIN_BASES_DIR = LOCAL_BASES_DIR / "m"
+LOCAL_DELTAS_DIR     = LOCAL_BASES_DIR / "d"
+LOCAL_VERSION_DIR    = LOCAL_BASES_DIR / "v"
+LOCAL_PENDING_DIR     = LOCAL_BASES_DIR / "p"
+
+
+# cache
+LOCAL_MAIN_CACHE_PATH = LOCAL_JSON_DIR / ".all_json_cache.json.gz"
+
+
+# automated backups
+LOCAL_FILES_BU_DIR   = LOCAL_CL9_DIR / "automated_backups" / "flashcards_all"
+LOCAL_SCRIPTS_BU_DIR = LOCAL_CL9_DIR / "automated_backups" / "scripts"
+
+
+
+# Extras
+LOCAL_DUP_CHECK_JSON   = LOCAL_JSON_DIR / "duplication_check_file.json"
+LOCAL_T_DUP_CHECK_JSON = LOCAL_JSON_DIR / "task_dup_check.json"
+LOCAL_LOG_PATH         = LOCAL_JSON_DIR / "log_err.txt"
+LOCAL_CAREER_NEWS      = LOCAL_JSON_DIR / "career_news.json"
+LOCAL_CREDS_PATH       = LOCAL_JSON_DIR / ".creds"
+LOCAL_BABEL_PATH       = LOCAL_JSON_DIR / "babel_draw.json.gz"
+LOCAL_MAKE_OFFLINE_PATH = LOCAL_JSON_DIR / ".make_offline.txt"
+
+LOCAL_TEXT_HISTORY = LOCAL_JSON_DIR / ".text_history.json.gz" # THIS path is also mentioned in ins_adder.py (not imported to keep that fast) # has two keys, 'last_sync': ts and 'history': {hash: date}
+
+VIVAL_LOAD_PATH: Path = HOME / "wing" / "career" / "dbt" / f"vivaldi_load_{HOSTNAME}.txt"
+
+
+# Scripts
+LOCAL_CL9_NAME = "cl9.py"
+LOCAL_INF_NAME = "inf.py"
+LOCAL_CL9_PATH = LOCAL_MAIN_DIR / LOCAL_CL9_NAME
+LOCAL_INF_PATH = LOCAL_MAIN_DIR / LOCAL_INF_NAME
+LOCAL_BASH_DIR = LOCAL_MAIN_DIR / "bash"
+
+
+# Termux
+IS_TERMUX = "com.termux" in str(HOME)
+LOCAL_TERMUX_REC_DIR     = HOME / "storage" / "music" / "Recordings"
+LOCAL_TERMUX_ST_REC_DIR  = LOCAL_TERMUX_REC_DIR / "Standard Recordings"
+
+
+
+DIRS_TO_CREATE: tuple[Path] = (
+    LOCAL_BAK_DIR,
+    LOCAL_BASES_DIR,
+    LOCAL_CL9_DIR,
+    LOCAL_DELTAS_DIR,
+    LOCAL_DUSTBIN,
+    LOCAL_FILES_BU_DIR,
+    LOCAL_JSON_DIR,
+    LOCAL_MAIN_BASES_DIR,
+    LOCAL_MAIN_DIR,
+    LOCAL_MANY_DIR,
+    LOCAL_PENDING_DIR,
+    LOCAL_SCRIPTS_BU_DIR,
+    LOCAL_SPEECH_DIR,
+    LOCAL_TMP_DIR,
+    LOCAL_VERSION_DIR,
+)
+
+
+for d in DIRS_TO_CREATE:
+    if not d.is_dir():
+        if d.exists():
+            try:
+                d.unlink()
+            except:
+                pass
+        d.mkdir(parents=True, exist_ok=True)
+
+
 
 # ===========================
 # MARK: AWS CONST
@@ -133,29 +191,31 @@ AWS_REQ_KEYS = {
     "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)"
 }
 
-AWS_SCRIPTS_PRE  = "scripts"
-AWS_JSON_PRE     = "j"
-AWS_AWS_PRE = "aws"
-AWS_SPEECH_PRE = "speech/"
-AWS_MANY_PRE = "many/" # many/n0, many/n1, ...
 
-AWS_SUB_MAIN_PRE   = f"{AWS_JSON_PRE}/m"
-AWS_SUB_DELTAS_PRE = f"{AWS_JSON_PRE}/u"
-AWS_VERSION_PRE    = f"{AWS_JSON_PRE}/v" # will contain an empty file inside like 1735252.txt
+AWS_SCRIPTS_PRE: S3Key  = "scripts/"
+AWS_JSON_PRE: S3Key     = "j/"
+AWS_BASES_PRE: S3Key    = "j/b/"
+AWS_AWS_PRE: S3Key = "aws/"
+AWS_SPEECH_PRE: S3Key = "speech/"
+AWS_MANY_PRE: S3Key = "many/" # many/n0, many/n1, ...
 
-AWS_TEXT_HISTORY = f"{AWS_JSON_PRE}/.text_history.json.gz"
-AWS_CLIP_KEY = f"{AWS_JSON_PRE}/.clips.json.gz"
-AWS_SCHEDULE_KEY = f"{AWS_JSON_PRE}/.schedules.json.gz"
+AWS_MAIN_PRE: S3Key        = f"{AWS_BASES_PRE}m/"
+AWS_DELTAS_PRE: S3Key      = f"{AWS_BASES_PRE}d/"
+AWS_VERSION_PRE: S3Key     = f"{AWS_BASES_PRE}v/" # will contain an empty file inside like 1735252.txt
 
-AWS_LAST_NEWS_KEY = "buffers/last_career_news_saved.txt"
-AWS_CAREER_NEWS_KEY = "buffers/career_newsv2.json.gz"
+AWS_TEXT_HISTORY: S3Key = f"{AWS_JSON_PRE}.text_history.json.gz"
+AWS_CLIP_KEY: S3Key = f"{AWS_JSON_PRE}.clips.json.gz"
+AWS_SCHEDULE_KEY: S3Key = f"{AWS_JSON_PRE}.schedules.json.gz"
+
+AWS_LAST_NEWS_KEY: S3Key = "buffers/last_career_news_saved.txt"
+AWS_CAREER_NEWS_KEY: S3Key = "buffers/career_newsv2.json.gz"
 
 # has two keys, 'last_sync': ts and 'history': {hash: date}
 
 
-AWS_TGZ_KEY  = f"{AWS_SCRIPTS_PRE}/complete_flashcard_program.tgz"
-AWS_CL9_KEY = f"{AWS_SCRIPTS_PRE}/{LOCAL_CL9_NAME}"
-AWS_INF_KEY = f"{AWS_SCRIPTS_PRE}/{LOCAL_INF_NAME}"
+AWS_TGZ_KEY: S3Key  = f"{AWS_SCRIPTS_PRE}complete_flashcard_program.tgz"
+AWS_CL9_KEY: S3Key = f"{AWS_SCRIPTS_PRE}{LOCAL_CL9_NAME}"
+AWS_INF_KEY: S3Key = f"{AWS_SCRIPTS_PRE}{LOCAL_INF_NAME}"
 
 
 # ===========================
@@ -166,19 +226,19 @@ TIME_FMT: str = "%Y-%m-%d_%H:%M:%S"
 DATE_FMT: str = "%Y-%m-%d"
 MONTH_FMT: str = '%Y-%m'
 
-OFFLINE_DEFAULT_DURATION: float = 2.0 * 3600.0 # seconds
-OFFLINE_MAX_DURATION: float = 24.0 * 3600.0 # seconds
+OFFLINE_DEFAULT_DURATION_MINUTES = 120   # 2 hours
+OFFLINE_MAX_DURATION_MINUTES = 1440      # 24 hours max
 
 # ===========================
 # MARK: CRYPTO CONST
 # ===========================
 
 # ----------------------------------------------
-def _cache_path():
-    run_dir = f"/run/user/{os.getuid()}"
-    if os.path.isdir(run_dir):
-        return os.path.join(run_dir, f"{PROGRAM_NAME}_passcache")
-    return os.path.join(tempfile.gettempdir(), f"{PROGRAM_NAME}_passcache") # for termux
+def _cache_path() -> Path:
+    run_dir: Path = Path("/run/user") / str(os.getuid())
+    if run_dir.is_dir():
+        return run_dir / f"{PROGRAM_NAME}_passcache"
+    return Path(tempfile.gettempdir()) / f"{PROGRAM_NAME}_passcache" # for termux
 
 
 
@@ -261,11 +321,8 @@ def get_cl9(): # --cl9
     S3, BUCKET_NAME = get_s3_bucket(__creds)
 
     # backup the previous stuff first
-    before_backup_path = os.path.join(
-        LOCAL_SCRIPTS_BU_DIR,
-        datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    )
-    os.makedirs(before_backup_path, exist_ok=True)
+    before_backup_path = LOCAL_SCRIPTS_BU_DIR / datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    before_backup_path.mkdir(parents=True, exist_ok=True)
 
     shutil.copytree(LOCAL_MAIN_DIR, before_backup_path, dirs_exist_ok=True)  # Copies everything
     print("Current backup taken")
@@ -276,33 +333,43 @@ def get_cl9(): # --cl9
     print("[init] Cleaning target directory:", LOCAL_MAIN_DIR)
     _purge_dir(LOCAL_MAIN_DIR)
 
+
     with tempfile.TemporaryDirectory(prefix="flashcards_unpack_") as tmpd:
+        tmpd = Path(tmpd)
         print("[init] Extracting archive")
-        _extract_tgz_bytes_to_dir(tgz, tmpd)
+        _extract_tgz_bytes_to_dir(tgz, tmpd) # updated too to handle Path
 
         # Copy all extracted contents into main_path
-        for name in os.listdir(tmpd):
-            src = os.path.join(tmpd, name)
-            dst = os.path.join(LOCAL_MAIN_DIR, name)
-            if os.path.isdir(src):
+        for src in tmpd.iterdir():
+            dst = LOCAL_MAIN_DIR / src.name
+            if src.is_dir():
                 shutil.copytree(src, dst, dirs_exist_ok=True)
             else:
                 shutil.copy2(src, dst)
 
-    # Remove previous versions
-    for v in [os.path.join(LOCAL_VERSION_DIR, ver) for ver in os.listdir(LOCAL_VERSION_DIR)]:
-        os.remove(v)
 
-    versions = list_s3_objects(AWS_VERSION_PRE, BUCKET_NAME, S3)
-    if len(versions) == 1: # usual case
-        version = versions[0]
-    elif len(versions) > 1:
-        version = max(versions, key=lambda x: float(x.removeprefix('v').split('_')[0]))
+
+    # Remove previous versions
+    for v in LOCAL_VERSION_DIR.iterdir():
+        if v.is_file():
+            v.unlink(missing_ok=True)
+        elif v.is_dir():
+            shutil.rmtree(v)
+        else:
+            crint(f"Error! Invalid path: {v}", 'red')
+
+
+    aws_versions: list[S3Key] = list_s3_objects(AWS_VERSION_PRE, BUCKET_NAME, S3)
+    if len(aws_versions) == 1: # usual case
+        version_key = aws_versions[0]
+    elif len(aws_versions) > 1:
+        version_key = max(aws_versions, key=lambda x: float(x.removeprefix('v').split('_')[0]))
     else:
-        print(f"[Error] No version file found. Please run update_flashcards.py from the host device to create one")
+        print(f"[Error] No version file found in S3. Please run update_flashcards.py from the host device to create one")
         return 1
 
-    if get_file_s3(version, path_join(LOCAL_VERSION_DIR, os.path.basename(version)), BUCKET_NAME, S3):
+    local_version_dst: Path = LOCAL_VERSION_DIR / version_key.split('/')[-1]
+    if get_file_s3(version_key, local_version_dst, BUCKET_NAME, S3):
         print('version updated successfully.')
         print('To install deps and aliases, Run python3 ~/cl9/m/dispatch.py --all')
     else:
@@ -325,9 +392,9 @@ def get_cl9(): # --cl9
 def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]:
     """
     Robust clipboard getter.
+
     Priority:
-    Priority:
-        1. pyperclip.copy
+        1. pyperclip.paste
         2. wl-paste
         3. xclip
         4. termux-clipboard-get (Termux)
@@ -449,6 +516,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]:
     return None
 
 
+
 # ---------------------------------
 def _prompt_line(msg: str) -> str:
     try:
@@ -473,7 +541,7 @@ def _prompt_password(msg: str) -> str:
 
 # ------------------------------------------
 def get_creds() -> Optional[dict[str, str]]:
-    if not os.path.exists(LOCAL_CREDS_PATH):
+    if not LOCAL_CREDS_PATH.is_file():
         if not coder_main():
             sys.exit(2)
     
@@ -516,32 +584,31 @@ def get_gh_pat(creds: dict[str, str]) -> str:
 # MARK: S3 FILE UTILS
 # ===========================
 
+
 # ----------------------------------------------------------------
-def _purge_dir(path: str) -> None:
+def _purge_dir(path: Path) -> None:
     """
     Remove all contents of `path` (files and directories). Path itself is preserved.
     """
-    if not os.path.isdir(path):
-        os.makedirs(path, exist_ok=True)
-        return
-    for entry in os.listdir(path):
-        p = os.path.join(path, entry)
+    path.mkdir(parents=True, exist_ok=True)
+
+    for entry in path.iterdir():
         try:
-            if os.path.islink(p) or os.path.isfile(p):
-                os.remove(p)
+            if entry.is_dir():
+                shutil.rmtree(entry)
             else:
-                shutil.rmtree(p)
+                entry.unlink()
         except Exception as e:
-            print(f"[WARN] Failed to delete {p}: {e!r}")
+            print(f"[WARN] Failed to delete {entry}: {e!r}")
 
 
 # ----------------------------------------------------------------
-def _download_bytes_from_s3(bucket: str, key: str, S3) -> bytes:
+def _download_bytes_from_s3(bucket: str, key: S3Key, S3) -> bytes:
     obj = S3.get_object(Bucket=bucket, Key=key)
     return obj["Body"].read()
 
 # ----------------------------------------------------------------
-def _extract_tgz_bytes_to_dir(tgz_bytes: bytes, dest_dir: str) -> None:
+def _extract_tgz_bytes_to_dir(tgz_bytes: bytes, dest_dir: Path) -> None:
     with io.BytesIO(tgz_bytes) as bio:
         with tarfile.open(fileobj=bio, mode="r:gz") as tf:
             # Extract safely: force no absolute paths, no path traversal
@@ -552,16 +619,16 @@ def _extract_tgz_bytes_to_dir(tgz_bytes: bytes, dest_dir: str) -> None:
             tf.extractall(dest_dir, filter="data")
 
 # ----------------------------------------------------------------
-def get_file_s3(aws_key: str, dest_name: str, bucket_name: str, S3) -> bool:
+def get_file_s3(aws_key: S3Key, dest_name: Path, bucket_name: str, S3) -> bool:
     """
     Simple version: directly downloads a file from AWS S3 and writes to disk.
     No atomic writes, no rollback, no temporary paths.
     """
     try:
-        _dir_name = os.path.dirname(dest_name)
-        if not os.path.exists(_dir_name):
-            os.makedirs(_dir_name)
-        S3.download_file(bucket_name, aws_key, dest_name)
+        _dir_name = dest_name.parent
+        _dir_name.mkdir(parents=True, exist_ok=True)
+        
+        S3.download_file(bucket_name, aws_key, str(dest_name))
         return True
     except Exception as e:
         print(f"Error downloading {aws_key} from {bucket_name}: {e}")
@@ -1393,9 +1460,6 @@ def coder_main() -> bool:
         return False
 
     out_path = LOCAL_CREDS_PATH
-    if not out_path:
-        print("Empty path. Exiting.")
-        return False
 
     min_len = 5
     while True:
@@ -1437,10 +1501,8 @@ def coder_main() -> bool:
 # ---------------------------------------------
 def decoder_main() -> Optional[dict[str, str]]:
     in_path = LOCAL_CREDS_PATH
-    if not in_path:
-        print("Empty path. Exiting.")
-        return
-    if not os.path.exists(in_path):
+
+    if not in_path.is_file():
         print("File not found.")
         if not coder_main():
             print("Exitting")
@@ -1456,7 +1518,7 @@ def decoder_main() -> Optional[dict[str, str]]:
             d = _decrypt_with_cached_key(blob, cached_key)
             if not all(k in d for k in AWS_REQ_KEYS):
                 crint("The creds file have invalid keys. Removing it.", 'red')
-                os.remove(in_path)
+                in_path.unlink()
                 sys.exit(2)
             refresh_cached_key()
             return d
@@ -1470,7 +1532,7 @@ def decoder_main() -> Optional[dict[str, str]]:
         return
     if password == 'reset':
         if _prompt_line("Are you sure you want to reset your password by deleting the existing credentials? (y/n) ") == 'y':
-            os.remove(in_path)
+            in_path.unlink()
             crint("Password Reset Successful. Please launch the Program again.", 'green')
             sys.exit(0)
         else:
@@ -1523,7 +1585,7 @@ def invalidate_cache():
 
     # 2. Fallback: remove file
     try:
-        os.remove(KEY_CACHE)
+        KEY_CACHE.unlink()
         print("File cache invalidated.")
         removed = True
     except FileNotFoundError:
@@ -1536,139 +1598,167 @@ def invalidate_cache():
 
 
 
-def _write_offline_file(new_ts: float):
-    with open(LOCAL_MAKE_OFFLINE_PATH, 'w') as f:
-        f.write(str(new_ts))
 
 
-def make_offline(hours: str|float|int = 2, verbose: bool = True):
+# ============================
+# OFFLINE
+# ============================
+
+
+
+
+def _write_offline_timestamp(end_ts: float) -> None:
+    """Atomically write the offline end timestamp to disk."""
     try:
-        hours = float(hours)
-        seconds = hours * 3600.0
-    except ValueError:
-        seconds = OFFLINE_DEFAULT_DURATION
-
-    seconds = min(seconds, OFFLINE_MAX_DURATION)
-    new_ts: float = time.time() + seconds
-    _write_offline_file(new_ts)
-    if verbose:
-        crint(f"cl9 made offline for {seconds/3600:.1f} hours")
-    return
-
-
-def make_online():
-    now = time.time()
-    _write_offline_file(now)
-
-
-
-__OFFLINE_DICT = {"offline": None, "offline_end_ts": 0.0}
-def is_offline(verbose: bool = True):
-    off_dict = __OFFLINE_DICT
-    
-    if off_dict["offline"] is not None:
-        if verbose and off_dict["offline"]:
-            end_hours = max(0.0, (off_dict["offline_end_ts"] - time.time())/3600.0)
-            crint(f"Offline Mode will end in {end_hours:.1f} Hours", 'yellow')
-        return off_dict["offline"]
-    
-    if not os.path.isfile(LOCAL_MAKE_OFFLINE_PATH):
-        off_dict["offline"] = False
-        return False
-    
-    try:
-        with open(LOCAL_MAKE_OFFLINE_PATH, 'r') as f:
-            end_ts = float(f.read().strip())
+        tmp_path = LOCAL_MAKE_OFFLINE_PATH.with_suffix(".tmp")
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(f"{end_ts:.6f}\n")
+            f.flush()
+            os.fsync(f.fileno())
+        tmp_path.replace(LOCAL_MAKE_OFFLINE_PATH)
     except Exception as e:
-        os.remove(LOCAL_MAKE_OFFLINE_PATH)
-        if verbose:
-            crint(f"An Exception occurred: {e}", 'red')
-        off_dict["offline"] = False
-        return False
+        crint(f"Failed to write offline timestamp: {e}", "red")
+
+
+
+def make_offline(minutes: str | float | int = OFFLINE_DEFAULT_DURATION_MINUTES) -> None:
+    """Set the device to offline mode for the given number of minutes."""
+    try:
+        minutes_val = float(minutes)
+    except (ValueError, TypeError):
+        minutes_val = OFFLINE_DEFAULT_DURATION_MINUTES
+
+    minutes_val = min(minutes_val, OFFLINE_MAX_DURATION_MINUTES)
+    end_ts = time.time() + minutes_val * 60
+
+    _write_offline_timestamp(end_ts)
+    crint(f"cl9 made offline for {minutes_val:.0f} minutes", "yellow")
+
+
+
+def make_online() -> None:
+    """Immediately bring the device back online."""
+    try:
+        if LOCAL_MAKE_OFFLINE_PATH.exists():
+            LOCAL_MAKE_OFFLINE_PATH.unlink()
+        crint("cl9 is online now. Type rev --sync to sync", "green")
+    except Exception as e:
+        crint(f"Error removing offline file: {e}", "red")
+        if LOCAL_MAKE_OFFLINE_PATH.is_dir():
+            shutil.rmtree(LOCAL_MAKE_OFFLINE_PATH)
+
+
+def is_offline() -> tuple[bool, str]:
+    """
+    Check current offline status. Always fresh — no caching.
+
+    Returns:
+        (is_currently_offline: bool, status_message: str)
+    """
+    if not LOCAL_MAKE_OFFLINE_PATH.is_file():
+        return False, "Online"
+
+    try:
+        content = LOCAL_MAKE_OFFLINE_PATH.read_text().strip()
+        end_ts = float(content)
+    except Exception as e:
+        crint(f"Error reading offline timestamp (file removed): {e}", "red")
+        try:
+            LOCAL_MAKE_OFFLINE_PATH.unlink(missing_ok=True)
+        except Exception:
+            pass
+        return False, "Online (corrupted offline file cleared)"
 
     now = time.time()
-    if end_ts > now:
-        if end_ts > now + OFFLINE_MAX_DURATION:
-            end_ts = now + OFFLINE_MAX_DURATION
-            _write_offline_file(end_ts)
-        if verbose:
-            crint(f"Offline Mode will end in {(end_ts-now)/3600:.1f} Hours", 'yellow')
-        off_dict["offline_end_ts"] = end_ts
-        off_dict["offline"] = True
-        return True
-    
-    off_dict["offline"] = False
-    return False
+
+    if end_ts <= now:
+        # Expired — clean up
+        try:
+            LOCAL_MAKE_OFFLINE_PATH.unlink(missing_ok=True)
+        except Exception as e:
+            crint(f"Error removing expired offline file: {e}", "red")
+        return False, "Online (offline period expired)"
+
+    # Still offline
+    remaining_minutes = max(0, (end_ts - now) / 60)
+    # Clamp to max just in case file was tampered with
+    if remaining_minutes > OFFLINE_MAX_DURATION_MINUTES:
+        end_ts = now + OFFLINE_MAX_DURATION_MINUTES * 60
+        _write_offline_timestamp(end_ts)
+        remaining_minutes = OFFLINE_MAX_DURATION_MINUTES
+
+    status_msg = f"Offline for {remaining_minutes:.0f} more minutes"
+    return True, status_msg
 
 
+# ========================
+# CLI Integration
+# ========================
 
 
-# ------------------------
-HELP_TEXT = """
-cl9 
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog = "cl9",
+        description = "The cl9 Learning System"
+    )
 
-Usage:
-    cl9 -v        Validate/refresh cache TTL (like sudo -v)
-    cl9 -i        Invalidate/delete cache
-    cl9 --help    Show this help message
-    cl9 --fetch   Fetches the latest verison of cl9 from the private bucket
+    actions = parser.add_mutually_exclusive_group(required=True)
 
-    cl9 --offline [hours]   Makes the device offline for default 2 hours
-    cl9 --online            Makes the device online again
-    
-Description:
+    actions.add_argument(
+        "-v",
+        action = "store_true",
+        help = "Validate/refresh the cache TTL"
+    )
 
-  -v (validate):
-      If a valid key-cache exists, its TTL is refreshed.
-      If no cache exists, nothing happens.
+    actions.add_argument(
+        "-i",
+        action = "store_true",
+        help = "Invalidate/delete cache TTL"
+    )
 
-  -i (invalidate):
-      Deletes the cache file if present.
+    actions.add_argument(
+        "--fetch",
+        action = "store_true",
+        help = "Fetch the latest version of cl9 from the private bucket"
+    )
 
-"""
+    actions.add_argument(
+        "--online",
+        action = "store_true",
+        help = "Makes the device online"
+    )
 
+    actions.add_argument(
+        "--offline",
+        nargs="?",
+        const = OFFLINE_DEFAULT_DURATION_MINUTES,
+        type = int,
+        metavar = "minutes",
+        help=f"Make device offline (default: {OFFLINE_DEFAULT_DURATION_MINUTES} minutes)",
+    )
 
+    args = parser.parse_args()
 
-
-
-def main():
-    if len(sys.argv) < 2:
-        print(HELP_TEXT.strip())
-        sys.exit(1)
-
-    arg = sys.argv[1].strip()
-
-    if arg == "--help":
-        print(HELP_TEXT.strip())
-        sys.exit(0)
-
-    elif arg == "-v":
+    if args.v:
         validate_cache()
-        sys.exit(0)
-
-    elif arg == "-i":
+    
+    elif args.i:
         invalidate_cache()
-        sys.exit(0)
 
-    elif arg == "--fetch":
+    elif args.fetch:
         get_cl9()
 
-    elif arg == "--offline":
-        if len(sys.argv) >=3:
-            hours = sys.argv[2]
-            make_offline(hours)
-        else:
-            make_offline()
+    elif args.offline is not None:
+        make_offline(args.offline)
 
-    elif arg == "--online":
+    elif args.online:
         make_online()
-        crint("cl9 is online now. Type rev --sync to sync", 'green')
 
-    else:
-        print("Unknown flag.")
-        print(HELP_TEXT.strip())
-        sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
