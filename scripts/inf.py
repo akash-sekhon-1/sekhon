@@ -24,6 +24,7 @@ import sys
 import urllib.error
 import urllib.request
 import time
+from pathlib import Path
 from textwrap import fill
 from typing import Optional
 
@@ -159,7 +160,7 @@ class Schedule:
 # =========================
 
 # ----------------------------------
-def _sha256_file(path: str) -> str:
+def _sha256_file(path: str|Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(65536), b""):
