@@ -1615,7 +1615,7 @@ def _write_offline_timestamp(end_ts: float) -> None:
             f.write(f"{end_ts:.6f}\n")
             f.flush()
             os.fsync(f.fileno())
-        tmp_path.replace(LOCAL_MAKE_OFFLINE_PATH)
+            tmp_path.replace(LOCAL_MAKE_OFFLINE_PATH)
     except Exception as e:
         crint(f"Failed to write offline timestamp: {e}", "red")
 
