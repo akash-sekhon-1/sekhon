@@ -1658,7 +1658,7 @@ def is_offline() -> tuple[bool, str]:
         (is_currently_offline: bool, status_message: str)
     """
     if not LOCAL_MAKE_OFFLINE_PATH.is_file():
-        return False, "Online"
+        return False, "cl9 is Online"
 
     try:
         content = LOCAL_MAKE_OFFLINE_PATH.read_text().strip()
@@ -1669,7 +1669,7 @@ def is_offline() -> tuple[bool, str]:
             LOCAL_MAKE_OFFLINE_PATH.unlink(missing_ok=True)
         except Exception:
             pass
-        return False, "Online (corrupted offline file cleared)"
+        return False, "cl9 is Online (corrupted offline file cleared)"
 
     now = time.time()
 
@@ -1679,7 +1679,7 @@ def is_offline() -> tuple[bool, str]:
             LOCAL_MAKE_OFFLINE_PATH.unlink(missing_ok=True)
         except Exception as e:
             crint(f"Error removing expired offline file: {e}", "red")
-        return False, "Online (offline period expired)"
+        return False, "cl9 is Online (offline period expired)"
 
     # Still offline
     remaining_minutes = max(0, (end_ts - now) / 60)
@@ -1689,7 +1689,7 @@ def is_offline() -> tuple[bool, str]:
         _write_offline_timestamp(end_ts)
         remaining_minutes = OFFLINE_MAX_DURATION_MINUTES
 
-    status_msg = f"Offline for {remaining_minutes:.0f} more minutes"
+    status_msg = f"cl9 is Offline for {remaining_minutes:.0f} more minutes"
     return True, status_msg
 
 
@@ -1739,6 +1739,12 @@ def main() -> None:
         help=f"Make device offline (default: {OFFLINE_DEFAULT_DURATION_MINUTES} minutes)",
     )
 
+    actions.add_argument(
+        "--status",
+        action="store_true",
+        help="Informs whether the device is online or offline"
+    )
+
     args = parser.parse_args()
 
     if args.v:
@@ -1755,7 +1761,9 @@ def main() -> None:
 
     elif args.online:
         make_online()
-
+    
+    elif args.status:
+        crint(is_offline()[1], 'yellow')
 
 
 if __name__ == "__main__":
