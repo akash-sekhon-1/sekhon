@@ -120,6 +120,8 @@ LOCAL_SCRIPTS_BU_DIR = LOCAL_CL9_DIR / "automated_backups" / "scripts"
 
 
 # Extras
+LOCAL_CLEANUP_INFO_FILE = LOCAL_JSON_DIR / "dir_and_prefix_cleanup_info" # contains last ts for bak cleanup and speech cleanup
+
 LOCAL_DUP_CHECK_JSON   = LOCAL_JSON_DIR / "duplication_check_file.json"
 LOCAL_T_DUP_CHECK_JSON = LOCAL_JSON_DIR / "task_dup_check.json"
 LOCAL_LOG_PATH         = LOCAL_JSON_DIR / "log_err.txt"
