@@ -391,7 +391,7 @@ def get_cl9(): # --cl9
 # ===========================
 
 # -----------------------------
-def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]:
+def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy paste it from utils.py which has the original version
     """
     Robust clipboard getter.
 
