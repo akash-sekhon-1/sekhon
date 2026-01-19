@@ -1546,12 +1546,13 @@ def decoder_main() -> Optional[dict[str, str]]:
         sys.exit(2)
 
     _store_key_cache(key)
-    d = json.loads(d.decode())
+    d: dict[str, str] = json.loads(d.decode())
     if not all(k in d for k in AWS_REQ_KEYS):
         crint("The creds file have invalid keys. Removing it.", 'red')
         os.remove(in_path)
         sys.exit(2)
-    return d
+
+    return {key: value.strip() for key, value in d.items()}
 
 
 # -----------------------
