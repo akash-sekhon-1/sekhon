@@ -1448,7 +1448,7 @@ def coder_main() -> bool:
                 if _tmp is None:
                     crint("Pasting is not possible. Type", 'red')
                     continue
-                line = _tmp
+                line = _tmp.strip()
                 if _prompt_line(f"Are you sure about {line[:3]}......{line[-3:]}? (y/n): ").strip().lower() != 'y':
                     continue
             if not line:
