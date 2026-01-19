@@ -1487,7 +1487,7 @@ def coder_main() -> bool:
         break
 
     blob = encrypt_dict(d, password)
-    tmp_path = out_path / ".tmp"
+    tmp_path = Path(str(out_path) + ".tmp")
 
     # atomic-ish write
     with open(tmp_path, "wb") as f:
