@@ -1482,7 +1482,7 @@ def coder_main() -> bool:
         break
 
     blob = encrypt_dict(d, password)
-    tmp_path = Path(str(out_path) + ".tmp")
+    tmp_path = out_path.parent / f"{out_path.name}.tmp"
 
     # atomic-ish write
     with open(tmp_path, "wb") as f:
