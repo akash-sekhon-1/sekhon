@@ -1463,21 +1463,16 @@ def coder_main() -> bool:
 
     out_path = LOCAL_CREDS_PATH
 
-    min_len = 5
+    min_len = 10
     while True:
         password = _prompt_password("Encryption password: ")
         if len(password) < min_len:
             output(f"Password is too short. It should be at least {min_len} digits. Try Again ...")
             continue
-        if password == 'reset':
-            print("reset as password is forbidden. Try again ...")
-            continue
-        break
-
-    if password in exits:
-        return False
+        
+        if password in exits:
+            return False
     
-    while True:
         confirm = _prompt_password("Confirm password: ")
         if confirm in exits:
             return False
