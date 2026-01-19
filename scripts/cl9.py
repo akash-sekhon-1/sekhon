@@ -1487,14 +1487,14 @@ def coder_main() -> bool:
         break
 
     blob = encrypt_dict(d, password)
-    tmp_path = out_path + ".tmp"
+    tmp_path = out_path / ".tmp"
 
     # atomic-ish write
     with open(tmp_path, "wb") as f:
         f.write(blob)
         f.flush()
         os.fsync(f.fileno())
-    os.replace(tmp_path, out_path)
+    tmp_path.replace(out_path)
 
     output(f"\nSaved {len(d)} entries to encrypted file: {out_path}")
     return True
