@@ -1733,27 +1733,6 @@ def main() -> None:
         help = "Fetch the latest version of cl9 from the private bucket"
     )
 
-    actions.add_argument(
-        "--online",
-        action = "store_true",
-        help = "Makes the device online"
-    )
-
-    actions.add_argument(
-        "--offline",
-        nargs="?",
-        const = OFFLINE_DEFAULT_DURATION_MINUTES,
-        type = int,
-        metavar = "minutes",
-        help=f"Make device offline (default: {OFFLINE_DEFAULT_DURATION_MINUTES} minutes)",
-    )
-
-    actions.add_argument(
-        "--status",
-        action="store_true",
-        help="Informs whether the device is online or offline"
-    )
-
     args = parser.parse_args()
 
     if args.v:
@@ -1764,15 +1743,6 @@ def main() -> None:
 
     elif args.fetch:
         get_cl9()
-
-    # elif args.offline is not None:
-    #     make_offline(args.offline)
-
-    # elif args.online:
-    #     make_online()
-    
-    # elif args.status:
-    #     crint(is_offline()[1], 'yellow')
 
 
 if __name__ == "__main__":
