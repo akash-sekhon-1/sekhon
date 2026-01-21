@@ -570,6 +570,19 @@ def get_s3_bucket(creds: dict[str, str]):
     return S3, creds["PRIVATE_BUCKET_NAME"]
 
 
+# ----------------------------
+def get_lambda(creds: dict):
+    import boto3
+    
+    lambda_client = boto3.client(
+        'lambda',
+        aws_access_key_id=creds["PRIVATE_AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=creds["PRIVATE_AWS_SECRET_ACCESS_KEY"],
+        region_name=creds["PRIVATE_BUCKET_REGION"]
+    )
+    return lambda_client
+
+
 # -----------------------------------
 def get_groq(creds: dict[str, str]) -> str:
     return creds["GROQ_KEY"]
@@ -1752,14 +1765,14 @@ def main() -> None:
     elif args.fetch:
         get_cl9()
 
-    elif args.offline is not None:
-        make_offline(args.offline)
+    # elif args.offline is not None:
+    #     make_offline(args.offline)
 
-    elif args.online:
-        make_online()
+    # elif args.online:
+    #     make_online()
     
-    elif args.status:
-        crint(is_offline()[1], 'yellow')
+    # elif args.status:
+    #     crint(is_offline()[1], 'yellow')
 
 
 if __name__ == "__main__":
