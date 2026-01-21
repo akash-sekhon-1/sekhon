@@ -1652,7 +1652,7 @@ def make_online() -> None:
     try:
         if LOCAL_MAKE_OFFLINE_PATH.exists():
             LOCAL_MAKE_OFFLINE_PATH.unlink()
-        crint("cl9 is online now. Type rev --sync to sync", "green")
+        # crint("cl9 is online now. Type rev --sync to sync", "green")
     except Exception as e:
         crint(f"Error removing offline file: {e}", "red")
         if LOCAL_MAKE_OFFLINE_PATH.is_dir():
