@@ -314,10 +314,10 @@ COLOR_MAP = {
 # ===========================
 
 # ----------------------
-def get_cl9(): # --cl9
+def get_cl9() -> bool: # --cl9
     if DEV_PC:
         crint("This operation is not allowed on the DEV MODE", 'red')
-        return 0
+        return False
 
     __creds = get_creds()
     S3, BUCKET_NAME = get_s3_bucket(__creds)
@@ -368,7 +368,7 @@ def get_cl9(): # --cl9
         version_key = max(aws_versions, key=lambda x: float(x.removeprefix('v').split('_')[0]))
     else:
         print(f"[Error] No version file found in S3. Please run update_flashcards.py from the host device to create one")
-        return 1
+        return False
 
     local_version_dst: Path = LOCAL_VERSION_DIR / version_key.split('/')[-1]
     if get_file_s3(version_key, local_version_dst, BUCKET_NAME, S3):
@@ -376,10 +376,10 @@ def get_cl9(): # --cl9
         print('To install deps and aliases, Run python3 ~/cl9/m/dispatch.py --all')
     else:
         print("[Error] Failed to download the latest version")
-        return 1
+        return False
 
     print("\n[init] Update complete.")
-    return 0
+    return True
 
 
 
