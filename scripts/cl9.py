@@ -313,6 +313,43 @@ COLOR_MAP = {
 # MARK: NATIVE DISPATCH
 # ===========================
 
+
+def backup_so_files() -> list[str]:
+    all_so_paths: list[Path] = []
+
+    main_dir = LOCAL_MAIN_DIR
+    tmp_dir = LOCAL_TMP_DIR
+
+    for file in main_dir.iterdir():
+        if file.is_file():
+            name = file.name
+            if name.endswith('.so'):
+                all_so_paths.append(file)
+
+    all_tmp_path = []
+    for file in all_so_paths:
+        tmp_path = tmp_dir / file.name
+        try:
+            file.copy(tmp_path, preserve_metadata=True)
+        except AttributeError: # older python versions
+            shutil.copy2(file, tmp_path)
+        all_tmp_path.append(tmp_path)
+
+    return all_tmp_path
+
+
+
+def restore_so_files(src_paths: list[Path]) -> None:
+    main_dir = LOCAL_MAIN_DIR
+    
+    for file in src_paths:
+        dst_path = main_dir / file.name
+        try:
+            file.copy(dst_path, preserve_metadata=True)
+        except AttributeError: # older python versions
+            shutil.copy2(file, dst_path)
+
+
 # ----------------------
 def get_cl9() -> bool: # --cl9
     if DEV_PC:
@@ -323,6 +360,7 @@ def get_cl9() -> bool: # --cl9
     S3, BUCKET_NAME = get_s3_bucket(__creds)
 
     # backup the previous stuff first
+    tmp_so_files = backup_so_files()
     before_backup_path = LOCAL_SCRIPTS_BU_DIR / datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     before_backup_path.mkdir(parents=True, exist_ok=True)
 
@@ -350,7 +388,8 @@ def get_cl9() -> bool: # --cl9
                 shutil.copy2(src, dst)
 
 
-
+    restore_so_files(tmp_so_files)
+    
     # Remove previous versions
     for v in LOCAL_VERSION_DIR.iterdir():
         if v.is_file():
