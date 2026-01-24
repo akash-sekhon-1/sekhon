@@ -207,6 +207,7 @@ AWS_BASES_PRE: S3Key    = "j/b/"
 AWS_AWS_PRE: S3Key = "aws/"
 AWS_SPEECH_PRE: S3Key = "speech/"
 AWS_MANY_PRE: S3Key = "many/" # many/n0, many/n1, ...
+AWS_DUSTBIN30_PRE: S3Key = "dustbin30/"
 
 AWS_ABBR_DATA_KEY: S3Key = f"{AWS_JSON_PRE}abbr_data.json.gz"
 
@@ -617,6 +618,15 @@ def get_s3_bucket(creds: dict[str, str]):
     )
     return S3, creds["PRIVATE_BUCKET_NAME"]
 
+
+def get_bucket_name(creds: dict[str, str]) -> str:
+    return creds["PRIVATE_BUCKET_NAME"]
+
+def get_region_name(creds: dict[str, str]) -> str:
+    return creds["PRIVATE_BUCKET_REGION"]
+
+def get_access_secret_keys(creds: dict[str, str]) -> tuple[str, str]:
+    return creds["PRIVATE_AWS_ACCESS_KEY_ID"], creds["PRIVATE_AWS_SECRET_ACCESS_KEY"]
 
 # ----------------------------
 def get_lambda(creds: dict):
