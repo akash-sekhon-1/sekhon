@@ -54,17 +54,19 @@ S3Key = NewType("S3Key", str)
 DELTA_VERSION: str = "2.1.1"
 
 PC_LOGIN_NAME: str = "akash@n0"
+N1_LOGIN_NAME: str = "akash@n1"
 HOSTNAME: str = gethostname()
 LOGIN_NAME: str = f"{getuser()}@{HOSTNAME}" # fast wifi PC where compaction happens automatically
 
 MAIN_PC: bool = PC_LOGIN_NAME == LOGIN_NAME
+N1_PC: bool = N1_LOGIN_NAME == LOGIN_NAME
 HOME: Path = Path.home()
 
 
 THIS_FILE = Path(__file__).resolve()
 DEV_ROOT = HOME / "cl9_dev" / "m" / "cl9.py"
 
-if MAIN_PC and (HOME / "cl9_dev").exists() and THIS_FILE == DEV_ROOT:
+if ((MAIN_PC or N1_PC) and (HOME / "cl9_dev").exists() and THIS_FILE == DEV_ROOT):
     print("DEVELOPMENT MODE ON")
     PROGRAM_NAME = 'cl9_dev'
     DEV_PC = True
@@ -94,7 +96,7 @@ LOCAL_MAIN_DIR    = LOCAL_CL9_DIR / "m"
 LOCAL_JSON_DIR    = LOCAL_CL9_DIR / "j"
 LOCAL_TMP_DIR     = LOCAL_CL9_DIR / "tmp"
 LOCAL_BAK_DIR     = LOCAL_CL9_DIR / "bak"
-
+LOCAL_DEV_DIR     = LOCAL_CL9_DIR / "dev"
 
 # non-cl9 roots
 LOCAL_MANY_DIR    = HOME / "many"
@@ -111,9 +113,11 @@ LOCAL_SYNC_TS_FILE = LOCAL_BASES_DIR / ".last_sync_ts.txt"
 
 # cache
 LOCAL_MAIN_CACHE_PATH = LOCAL_JSON_DIR / ".all_json_cache.json.gz"
-
+LOCAL_ABBR_DATA = LOCAL_JSON_DIR / "abbr_data.json.gz"
 
 # automated backups
+LOCAL_BACKUPS_DIR = LOCAL_CL9_DIR / "backups"
+LOCAL_ABBR_BACKUP_DIR = LOCAL_BACKUPS_DIR / "abbr"
 LOCAL_FILES_BU_DIR   = LOCAL_CL9_DIR / "automated_backups" / "flashcards_all"
 LOCAL_SCRIPTS_BU_DIR = LOCAL_CL9_DIR / "automated_backups" / "scripts"
 
@@ -166,6 +170,9 @@ DIRS_TO_CREATE: tuple[Path] = (
     LOCAL_SPEECH_DIR,
     LOCAL_TMP_DIR,
     LOCAL_VERSION_DIR,
+    LOCAL_BACKUPS_DIR,
+    LOCAL_ABBR_BACKUP_DIR,
+    LOCAL_DEV_DIR
 )
 
 
@@ -200,6 +207,8 @@ AWS_BASES_PRE: S3Key    = "j/b/"
 AWS_AWS_PRE: S3Key = "aws/"
 AWS_SPEECH_PRE: S3Key = "speech/"
 AWS_MANY_PRE: S3Key = "many/" # many/n0, many/n1, ...
+
+AWS_ABBR_DATA_KEY: S3Key = f"{AWS_JSON_PRE}abbr_data.json.gz"
 
 AWS_MAIN_PRE: S3Key        = f"{AWS_BASES_PRE}m/"
 AWS_DELTAS_PRE: S3Key      = f"{AWS_BASES_PRE}d/"
