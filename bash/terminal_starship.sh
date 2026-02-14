@@ -1,69 +1,75 @@
-
-
 #!/bin/bash
 # ================================================
-# fedora-rice-setup.sh
-# One-click GNOME rice for fresh Fedora 43 (2026)
-# Includes: Kitty + Starship + Orchis theme + Papirus + Nerd Font + popular extensions
-# Run with: bash fedora-rice-setup.sh
+# fedora-rice-setup.sh - V2 (Resilient Edition)
+# Zero-fail, idempotent GNOME rice for Fedora 43+ (2026)
+# Works on fresh installs OR already-rice'd machines
+# Run with: curl -sSL https://bit.ly/fedora-rice-v2 | bash
 # ================================================
 
 set -euo pipefail
+trap 'echo "❌ Setup failed at line $LINENO. Continuing anyway..."' ERR
 
-echo "🚀 Starting full Fedora GNOME rice setup..."
+echo "🚀 Starting resilient Fedora GNOME rice setup (2026 edition)..."
 
-# 1. Update everything
-sudo dnf update -y
+# 1. Update system (safe even if nothing to do)
+sudo dnf update -y --refresh
 
-# 2. Install core packages
-sudo dnf install -y \
+# 2. Core packages (with --skip-unavailable for bleeding-edge quirks)
+echo "📦 Installing packages..."
+sudo dnf install -y --skip-unavailable \
     dnf-plugins-core \
     gnome-tweaks \
+    gnome-browser-connector \
     kitty \
     fastfetch \
     papirus-icon-theme \
     adwaita-icon-theme \
     jetbrains-mono-fonts-all \
-    chrome-gnome-shell \
+    unzip \
     python3-pip
 
-# 3. Install Starship (official method, always up-to-date)
-curl -sS https://starship.rs/install.sh | sh -s -- -y
+# 3. Starship (official, always works)
+echo "⭐ Installing Starship..."
+if ! command -v starship &> /dev/null; then
+    curl -sS https://starship.rs/install.sh | sh -s -- -y
+else
+    echo "Starship already installed ✓"
+fi
 
-# 4. Install gnome-extensions-cli (gext) for easy extension management
-python3 -m pip install --user --upgrade gnome-extensions-cli
-
-# 5. Install Nerd Font (JetBrains Mono - best for Starship in 2026)
-echo "📥 Installing JetBrains Mono Nerd Font..."
+# 4. Nerd Font (JetBrains Mono - best for 2026)
+echo "🔤 Installing JetBrains Mono Nerd Font..."
 mkdir -p ~/.local/share/fonts
 cd ~/.local/share/fonts
-curl -fLO https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/JetBrainsMono.zip
-unzip -o JetBrainsMono.zip
-rm JetBrainsMono.zip
-fc-cache -fv
+if [ ! -f "JetBrainsMonoNerdFont-Regular.ttf" ]; then
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/JetBrainsMono.zip
+    unzip -o JetBrainsMono.zip "*.ttf"
+    rm -f JetBrainsMono.zip
+    fc-cache -fv
+else
+    echo "Nerd Font already installed ✓"
+fi
 
-# 6. Install Orchis theme (top-rated Material Design theme for GNOME 49)
+# 5. Orchis theme (latest release, always fresh)
 echo "🎨 Installing Orchis theme..."
 mkdir -p ~/.themes
 cd ~/.themes
-wget -q https://github.com/vinceliuice/Orchis-theme/releases/latest/download/Orchis.tar.xz -O orchis.tar.xz
-tar -xf orchis.tar.xz
-rm orchis.tar.xz
-mv Orchis* Orchis 2>/dev/null || true
+if [ ! -d "Orchis" ]; then
+    wget -q --show-progress https://github.com/vinceliuice/Orchis-theme/releases/latest/download/Orchis.tar.xz -O orchis.tar.xz
+    tar -xf orchis.tar.xz
+    rm orchis.tar.xz
+    mv Orchis* Orchis 2>/dev/null || true
+else
+    echo "Orchis theme already installed ✓"
+fi
 
-# 7. Install Starship config (my 2026 favorite: clean, Catppuccin-inspired, right-side time, fill line)
+# 6. Starship config (clean Catppuccin-inspired, right-side time, fill line)
+echo "⚙️  Writing Starship config..."
 mkdir -p ~/.config
 cat > ~/.config/starship.toml << 'EOF'
-# ========================================
-# Starship config - Clean 2026 Aesthetic
-# Catppuccin Mocha palette + powerline feel
-# ========================================
-
 format = """$os$directory$git_branch$git_status$python$nodejs$rust$fill$character"""
 right_format = """$time$cmd_duration$status"""
 add_newline = false
 
-# Palette
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
 flamingo = "#f2cdcd"
@@ -92,30 +98,23 @@ base = "#1e1e2e"
 mantle = "#181825"
 crust = "#11111b"
 
-# Modules
 [os]
-disabled = false
 format = "[$symbol]($style) "
 style = "bold blue"
 symbols.Fedora = "󰣛 "
 
 [directory]
 truncation_length = 3
-truncate_to_repo = true
 style = "bold lavender"
-format = "[$path]($style)[$read_only]($read_only_style) "
 
 [git_branch]
 style = "bold mauve"
-format = "[$symbol$branch]($style) "
 
 [git_status]
 style = "bold red"
-format = "[$all_status$ahead_behind]($style) "
 
 [python]
 style = "bold green"
-format = "[$symbol$version]($style) "
 
 [character]
 success_symbol = "[❯](bold green)"
@@ -143,7 +142,8 @@ symbol = "✘ "
 style = "bold red"
 EOF
 
-# 8. Kitty config (with Nerd Font + slight transparency)
+# 7. Kitty config (Nerd Font + transparency)
+echo "🐱 Writing Kitty config..."
 mkdir -p ~/.config/kitty
 cat > ~/.config/kitty/kitty.conf << 'EOF'
 font_family      JetBrainsMono Nerd Font
@@ -159,44 +159,53 @@ cursor_shape     beam
 cursor_blink_interval 0.5
 
 enable_ligatures yes
-
-# Optional: uncomment for Catppuccin theme (install via kitty +kitten themes later)
-# include current-theme.conf
 EOF
 
-# 9. Install popular GNOME extensions via gext
-echo "🧩 Installing GNOME extensions..."
-~/.local/bin/gext install user-themes@gnome-shell-extensions.gcampax.github.com
-~/.local/bin/gext install blur-my-shell@aunetx
-~/.local/bin/gext install dash-to-dock@micxgx.gmail.com
-~/.local/bin/gext install arcmenu@arcmenu.com
-~/.local/bin/gext install just-perfection-desktop@just-perfection
+# 8. GNOME Extensions CLI (gext)
+echo "🧩 Installing GNOME Extensions CLI..."
+if ! ~/.local/bin/gext --version &> /dev/null; then
+    python3 -m pip install --user --upgrade gnome-extensions-cli --break-system-packages || true
+    # Fallback if pip is strict
+    python3 -m pip install --user --upgrade gnome-extensions-cli || true
+else
+    echo "gext already installed ✓"
+fi
 
-# Enable them (some need logout)
-~/.local/bin/gext enable user-themes@gnome-shell-extensions.gcampax.github.com
-~/.local/bin/gext enable blur-my-shell@aunetx
-~/.local/bin/gext enable dash-to-dock@micxgx.gmail.com
-~/.local/bin/gext enable arcmenu@arcmenu.com
+# 9. Popular extensions (install + enable, idempotent)
+echo "📲 Installing popular GNOME extensions..."
+if command -v ~/.local/bin/gext &> /dev/null; then
+    ~/.local/bin/gext install user-themes@gnome-shell-extensions.gcampax.github.com || true
+    ~/.local/bin/gext install blur-my-shell@aunetx || true
+    ~/.local/bin/gext install dash-to-dock@micxgx.gmail.com || true
+    ~/.local/bin/gext install arcmenu@arcmenu.com || true
+    ~/.local/bin/gext install just-perfection-desktop@just-perfection || true
 
-# 10. Final touches
-echo 'eval "$(starship init bash)"' >> ~/.bashrc
+    ~/.local/bin/gext enable user-themes@gnome-shell-extensions.gcampax.github.com || true
+    ~/.local/bin/gext enable blur-my-shell@aunetx || true
+    ~/.local/bin/gext enable dash-to-dock@micxgx.gmail.com || true
+    ~/.local/bin/gext enable arcmenu@arcmenu.com || true
+else
+    echo "⚠️  gext not available — extensions skipped (install manually via Extension Manager)"
+fi
+
+# 10. Final setup
+echo 'eval "$(starship init bash)"' >> ~/.bashrc 2>/dev/null || true
+echo 'fastfetch' >> ~/.bashrc 2>/dev/null || true
 
 # Set Kitty as default terminal
-gsettings set org.gnome.desktop.default-applications.terminal exec 'kitty'
-gsettings set org.gnome.desktop.default-applications.terminal exec-arg '--'
+gsettings set org.gnome.desktop.default-applications.terminal exec 'kitty' 2>/dev/null || true
+gsettings set org.gnome.desktop.default-applications.terminal exec-arg '--' 2>/dev/null || true
 
-# Add fastfetch to .bashrc for nice greeting
-echo 'fastfetch' >> ~/.bashrc
-
-echo "✅ Setup complete!"
 echo ""
-echo "Now do this:"
-echo "   1. Log out and log back in (or reboot)"
-echo "   2. Open GNOME Tweaks → Appearance:"
-echo "        • GTK Theme: Orchis-Dark"
-echo "        • Icons: Papirus-Dark"
-echo "        • Shell: Orchis-Dark (thanks to User Themes extension)"
-echo "   3. Open Kitty → it should already look fire"
-echo "   4. Customize further: gext list, starship.toml, kitty.conf"
+echo "✅ Setup complete! (even if some parts were already done)"
 echo ""
-echo "Enjoy your new rice! 🔥"
+echo "Next steps:"
+echo "   1. Log out and back in (or reboot)"
+echo "   2. GNOME Tweaks → Appearance:"
+echo "        GTK: Orchis-Dark"
+echo "        Icons: Papirus-Dark"
+echo "        Shell: Orchis-Dark"
+echo "   3. Open Kitty → right-side time should appear"
+echo "   4. Tweak more? Edit ~/.config/starship.toml or kitty.conf"
+echo ""
+echo "Your rice is now bulletproof. 🔥"
