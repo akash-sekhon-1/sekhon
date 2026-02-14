@@ -771,6 +771,13 @@ OPTS = {
         'p': "bash/lazy-vim.sh",
         'w': None,
         'dep': None
+    },
+
+    "--terminal-starship": {
+        'd': "Install and sets up the starship for ricing terminal. It also overwrites ~/.configs/starship.toml",
+        'p': "bash/terminal_starship.sh",
+        'w': None,
+        'dep': None
     }
 }
 
