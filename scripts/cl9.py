@@ -46,7 +46,7 @@ from typing import Dict, NewType, Optional
 S3Key = NewType("S3Key", str)
 
 
-
+sys.path.insert(0, str(Path(__file__).resolve().parent / "pybind11"))
 
 # ===========================
 # GLOBAL
