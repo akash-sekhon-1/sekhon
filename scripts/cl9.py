@@ -323,17 +323,22 @@ COLOR_MAP = {
 # MARK: NATIVE DISPATCH
 # ===========================
 
-
 def backup_so_files() -> list[str]:
     all_so_paths: list[Path] = []
 
     main_dir = LOCAL_MAIN_DIR
     tmp_dir = LOCAL_TMP_DIR
 
+    # Backup .so files from main_dir
     for file in main_dir.iterdir():
-        if file.is_file():
-            name = file.name
-            if name.endswith('.so'):
+        if file.is_file() and file.name.endswith('.so'):
+            all_so_paths.append(file)
+
+    # Backup .so files from main_dir/pybind11/
+    pybind11_dir = main_dir / 'pybind11'
+    if pybind11_dir.exists() and pybind11_dir.is_dir():
+        for file in pybind11_dir.iterdir():
+            if file.is_file() and file.name.endswith('.so'):
                 all_so_paths.append(file)
 
     all_tmp_path = []
@@ -341,24 +346,35 @@ def backup_so_files() -> list[str]:
         tmp_path = tmp_dir / file.name
         try:
             file.copy(tmp_path, preserve_metadata=True)
-        except AttributeError: # older python versions
+        except AttributeError:  # older python versions
             shutil.copy2(file, tmp_path)
         all_tmp_path.append(tmp_path)
 
     return all_tmp_path
 
 
-
 def restore_so_files(src_paths: list[Path]) -> None:
     main_dir = LOCAL_MAIN_DIR
+    pybind11_dir = main_dir / 'pybind11'
     
     for file in src_paths:
-        dst_path = main_dir / file.name
+        # Check if this file originally came from pybind11/ subdirectory
+        # by checking if it exists there (or restore to main_dir as fallback)
+        if pybind11_dir.exists():
+            pybind11_dst = pybind11_dir / file.name
+            if pybind11_dst.exists() or any((pybind11_dir / f.name).exists() for f in src_paths):
+                dst_path = pybind11_dst
+            else:
+                dst_path = main_dir / file.name
+        else:
+            dst_path = main_dir / file.name
+            
         try:
             file.copy(dst_path, preserve_metadata=True)
-        except AttributeError: # older python versions
+        except AttributeError:  # older python versions
             shutil.copy2(file, dst_path)
 
+            
 
 # ----------------------
 def get_cl9() -> bool: # --cl9
