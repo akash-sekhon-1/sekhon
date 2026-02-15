@@ -43,13 +43,7 @@ success_symbol = "[❯](green bold)"
 error_symbol = "[❯](red bold)"
 EOF
 
-echo "[*] Optional shell switch to zsh..."
-read -p "Install & switch to zsh? (y/n): " ans
-if [ "$ans" = "y" ]; then
-    pkg install -y zsh
-    chsh -s zsh
-    echo 'eval "$(starship init zsh)"' >> ~/.zshrc
-fi
+
 
 echo
 echo "Done."
