@@ -46,7 +46,6 @@ from typing import Dict, NewType, Optional
 S3Key = NewType("S3Key", str)
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parent / "pybind11"))
 
 # ===========================
 # GLOBAL
@@ -337,18 +336,6 @@ def backup_so_files() -> list[tuple[Path, Path]]:
             except AttributeError:
                 shutil.copy2(file, tmp_path)
             backups.append((file, tmp_path))
-
-    # Backup .so files from main_dir/pybind11/
-    pybind11_dir = main_dir / 'pybind11'
-    if pybind11_dir.exists() and pybind11_dir.is_dir():
-        for file in pybind11_dir.iterdir():
-            if file.is_file() and file.name.endswith('.so'):
-                tmp_path = tmp_dir / f"pybind11_{file.name}"  # Prefix to avoid collision
-                try:
-                    file.copy(tmp_path, preserve_metadata=True)
-                except AttributeError:
-                    shutil.copy2(file, tmp_path)
-                backups.append((file, tmp_path))
 
     return backups
 
@@ -1808,7 +1795,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
 
 
