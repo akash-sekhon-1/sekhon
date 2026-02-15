@@ -323,56 +323,44 @@ COLOR_MAP = {
 # MARK: NATIVE DISPATCH
 # ===========================
 
-def backup_so_files() -> list[str]:
-    all_so_paths: list[Path] = []
-
+def backup_so_files() -> list[tuple[Path, Path]]:
+    """Returns list of (src_path, tmp_path) tuples to preserve structure"""
+    backups: list[tuple[Path, Path]] = []
     main_dir = LOCAL_MAIN_DIR
     tmp_dir = LOCAL_TMP_DIR
 
     # Backup .so files from main_dir
     for file in main_dir.iterdir():
         if file.is_file() and file.name.endswith('.so'):
-            all_so_paths.append(file)
+            tmp_path = tmp_dir / file.name
+            try:
+                file.copy(tmp_path, preserve_metadata=True)
+            except AttributeError:
+                shutil.copy2(file, tmp_path)
+            backups.append((file, tmp_path))
 
     # Backup .so files from main_dir/pybind11/
     pybind11_dir = main_dir / 'pybind11'
     if pybind11_dir.exists() and pybind11_dir.is_dir():
         for file in pybind11_dir.iterdir():
             if file.is_file() and file.name.endswith('.so'):
-                all_so_paths.append(file)
+                tmp_path = tmp_dir / f"pybind11_{file.name}"  # Prefix to avoid collision
+                try:
+                    file.copy(tmp_path, preserve_metadata=True)
+                except AttributeError:
+                    shutil.copy2(file, tmp_path)
+                backups.append((file, tmp_path))
 
-    all_tmp_path = []
-    for file in all_so_paths:
-        tmp_path = tmp_dir / file.name
+    return backups
+
+
+def restore_so_files(backups: list[tuple[Path, Path]]) -> None:
+    """Restore each file to its original location"""
+    for original_path, tmp_path in backups:
         try:
-            file.copy(tmp_path, preserve_metadata=True)
-        except AttributeError:  # older python versions
-            shutil.copy2(file, tmp_path)
-        all_tmp_path.append(tmp_path)
-
-    return all_tmp_path
-
-
-def restore_so_files(src_paths: list[Path]) -> None:
-    main_dir = LOCAL_MAIN_DIR
-    pybind11_dir = main_dir / 'pybind11'
-    
-    for file in src_paths:
-        # Check if this file originally came from pybind11/ subdirectory
-        # by checking if it exists there (or restore to main_dir as fallback)
-        if pybind11_dir.exists():
-            pybind11_dst = pybind11_dir / file.name
-            if pybind11_dst.exists() or any((pybind11_dir / f.name).exists() for f in src_paths):
-                dst_path = pybind11_dst
-            else:
-                dst_path = main_dir / file.name
-        else:
-            dst_path = main_dir / file.name
-            
-        try:
-            file.copy(dst_path, preserve_metadata=True)
-        except AttributeError:  # older python versions
-            shutil.copy2(file, dst_path)
+            tmp_path.copy(original_path, preserve_metadata=True)
+        except AttributeError:
+            shutil.copy2(tmp_path, original_path)
 
             
 
