@@ -44,6 +44,11 @@ error_symbol = "[❯](red bold)"
 EOF
 
 
+pkg install -y fastfetch || true
+if ! grep -q "command -v fastfetch" ~/.bashrc; then
+    echo 'if command -v fastfetch &>/dev/null; then fastfetch; fi' >> ~/.bashrc
+fi
+
 
 echo
 echo "Done."
