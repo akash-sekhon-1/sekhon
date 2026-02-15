@@ -20,6 +20,7 @@ CATEGORIES=(
   "FPGA"
   "SECURITY"
   "COMPRESSION"
+  "DECORATION"
 )
 
 # -----------------------------
@@ -53,6 +54,8 @@ FPGA="verilog verilator gtkwave yosys iverilog"
 SECURITY="audit audit-libs-devel libseccomp libseccomp-devel selinux-policy-devel setools-console policycoreutils-python-utils"
 
 COMPRESSION="xz zstd lz4 rpm-build rpmdevtools cpio p7zip-plugins"
+
+DECORATION="fastfetch neofetch cmatrix asciiquarium cbonsai tty-clock lolcat figlet cowsay fortune-mod btop"
 
 # -----------------------------
 # Menu
