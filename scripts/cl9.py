@@ -217,7 +217,6 @@ AWS_VERSION_PRE: S3Key     = f"{AWS_BASES_PRE}v/" # will contain an empty file i
 
 AWS_TEXT_HISTORY: S3Key = f"{AWS_JSON_PRE}.text_history.json.gz"
 AWS_CLIP_KEY: S3Key = f"{AWS_JSON_PRE}.clips.json.gz"
-AWS_SCHEDULE_KEY: S3Key = f"{AWS_JSON_PRE}.schedules.json.gz"
 
 AWS_LAST_NEWS_KEY: S3Key = "buffers/last_career_news_saved.txt"
 AWS_CAREER_NEWS_KEY: S3Key = "buffers/career_newsv2.json.gz"
