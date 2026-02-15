@@ -29,6 +29,10 @@ font_size        11.0
 EOF
 
 # Papirus icons
-sudo dnf install -y papirus-icon-theme
+sudo dnf install -y --skip-unavailable papirus-icon-theme fastfetch || true
 
-echo "Done. Restart terminal and enable extensions at https://extensions.gnome.org"
+if ! grep -q "command -v fastfetch" ~/.bashrc; then
+    echo 'if command -v fastfetch &>/dev/null; then fastfetch; fi' >> ~/.bashrc
+fi
+
+echo "Done. Restart terminal 
