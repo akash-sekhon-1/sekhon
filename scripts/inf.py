@@ -773,13 +773,21 @@ OPTS = {
         'dep': None
     },
 
-    "--terminal-starship": {
-        'd': "Install and sets up the starship for ricing terminal. It also overwrites ~/.config/starship.toml",
-        'p': "bash/terminal_starship.sh",
+    "--fedora-starship": {
+        'd': "Install and configure Starship for Fedora terminal ricing (enables prompt in shell and overwrites ~/.config/starship.toml)",
+        'p': "bash/ricing/fedora_starship.sh",
+        'w': None,
+        'dep': None
+    },
+
+    "--termux-starship": {
+        'd': "Install and configure Starship for Termux terminal (sets Nerd Font, enables prompt, and overwrites ~/.config/starship.toml)",
+        'p': "bash/ricing/termux.sh",
         'w': None,
         'dep': None
     }
-}
+
+}   
 
 # ------------------------
 if __name__ == "__main__":
