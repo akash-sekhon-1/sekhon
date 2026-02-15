@@ -5,6 +5,8 @@
   "bash/code_force_ip4.sh": "63b20a70d3c99b7f5ec79c2581b2059157d319eaa934b08a20e4c388624127fc",
   "bash/dash-to-panel.sh": "6bdbca01a29091a2adcd85a8861ee37fca3f2844472b75de8a02328edd194b10",
   "bash/edge.sh": "07a5cd9eeb474dbf5a348fd3f135c1289653ca10b35d0eb5509f599622ba3f8e",
+  "bash/ricing/fedora_starship.sh": "ec196f233e7db2f353f8ee19eacb0ae33bd77b09a08d17c1b9ef924c38fec865",
+  "bash/ricing/termux.sh": "83004d0feed3c2653024215498a765e0f0016c508e81e99170b772d12b035a53",
   "bash/ull.sh": "2e744e7adef3ea05a61d3f34b28ebd7dabbe15d755aa99b029d40382b277ca72",
   "bash/vivaldi.sh": "d9f1f7e6880460f40a112b5fec6e9261e0807800c20c7bd8911952ad77722313",
   "bash/vscode.sh": "b59e36866c7b2123fa06a1ef7fae4e3440bdaca0d4243bfa88de26c5ac75329c",
