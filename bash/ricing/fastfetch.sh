@@ -32,4 +32,4 @@ random_index=$((RANDOM % num_logos))
 random_logo="${logos[$random_index]}"
 
 # Run fastfetch with the random logo
-fastfetch --logo "$random_logo"
+fastfetch --logo "$random_logo" --structure " "
