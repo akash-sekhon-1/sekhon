@@ -196,7 +196,8 @@ AWS_REQ_KEYS = {
     "PRIVATE_BUCKET_REGION": "Region of the private bucket. Example: ap-south-1",
 
     "GROQ_KEY": "API key of Groq LLM",
-    "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)"
+    "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)",
+    "SUDO_PASSWORD": "The sudo password for this device."
 }
 
 
@@ -617,6 +618,9 @@ def get_region_name(creds: dict[str, str]) -> str:
 
 def get_access_secret_keys(creds: dict[str, str]) -> tuple[str, str]:
     return creds["PRIVATE_AWS_ACCESS_KEY_ID"], creds["PRIVATE_AWS_SECRET_ACCESS_KEY"]
+
+def get_sudo_password(creds: dict[str, str]) -> str:
+    return creds["SUDO_PASSWORD"]
 
 # ----------------------------
 def get_lambda(creds: dict):
