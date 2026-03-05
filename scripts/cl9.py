@@ -135,8 +135,6 @@ LOCAL_MAKE_OFFLINE_PATH = LOCAL_JSON_DIR / ".make_offline.txt"
 
 LOCAL_TEXT_HISTORY = LOCAL_JSON_DIR / ".text_history.json.gz" # THIS path is also mentioned in ins_adder.py (not imported to keep that fast) # has two keys, 'last_sync': ts and 'history': {hash: date}
 
-VIVAL_LOAD_PATH: Path = HOME / "wing" / "career" / "dbt" / f"vivaldi_load_{HOSTNAME}.txt"
-
 
 # Scripts
 LOCAL_CL9_NAME = "cl9.py"
@@ -1799,5 +1797,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 
