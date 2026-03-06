@@ -6,7 +6,7 @@
   "bash/dash-to-panel.sh": "6bdbca01a29091a2adcd85a8861ee37fca3f2844472b75de8a02328edd194b10",
   "bash/edge.sh": "07a5cd9eeb474dbf5a348fd3f135c1289653ca10b35d0eb5509f599622ba3f8e",
   "bash/ricing/fastfetch.sh": "6bcbdfa3b175947a6819cfe96e9b970da506ddc52b38ba53ff23bea8c3edef37",
-  "bash/ricing/fedora_starship.sh": "dd121bc6bd9675a040afb9392715589937930bb42883e458bded7baed68e961b",
+  "bash/ricing/fedora_starship.sh": "fed6e2a60bd9c19747653c4e4d689a03f461be5e35530f92efbb5b2ff4fab3b2",
   "bash/ricing/termux.sh": "9abcb5c218dee181df50311c17c99993f681f27065cf5e82102f76e82dac7cab",
   "bash/ull.sh": "e574bfb02c5598caf13e98f4efa0e0c8b6f90429c0a9167703ab9ee014f8458d",
   "bash/vscode.sh": "b59e36866c7b2123fa06a1ef7fae4e3440bdaca0d4243bfa88de26c5ac75329c",
