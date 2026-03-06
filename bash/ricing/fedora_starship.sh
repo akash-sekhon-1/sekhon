@@ -22,10 +22,6 @@ fc-cache -fv
 # Kitty
 sudo dnf install -y kitty
 mkdir -p ~/.config/kitty
-cat > ~/.config/kitty/kitty.conf << 'EOF'
-font_family      JetBrainsMono Nerd Font
-font_size        11.0
-EOF
 
 # Papirus icons
 sudo dnf install -y --skip-unavailable papirus-icon-theme fastfetch || true
