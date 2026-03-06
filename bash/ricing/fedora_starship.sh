@@ -10,7 +10,6 @@ sudo dnf install -y gnome-extensions-app --skip-unavailable
 # Starship
 sudo dnf copr enable -y atim/starship
 sudo dnf install -y starship
-echo 'eval "$(starship init bash)"' >> ~/.bashrc
 
 # Nerd Font
 mkdir -p ~/.local/share/fonts
@@ -30,9 +29,5 @@ EOF
 
 # Papirus icons
 sudo dnf install -y --skip-unavailable papirus-icon-theme fastfetch || true
-
-if ! grep -q "command -v fastfetch" ~/.bashrc; then
-    echo 'if command -v fastfetch &>/dev/null; then fastfetch; fi' >> ~/.bashrc
-fi
 
 echo "Done. Restart terminal 
