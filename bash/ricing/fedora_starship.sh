@@ -4,7 +4,7 @@ set -e
 # Fix GNOME Tweaks
 sudo dnf install -y gnome-tweaks
 
-# Extensions 
+# Extensions
 sudo dnf install -y gnome-extensions-app --skip-unavailable
 
 # Starship
@@ -26,4 +26,13 @@ mkdir -p ~/.config/kitty
 # Papirus icons
 sudo dnf install -y --skip-unavailable papirus-icon-theme fastfetch || true
 
-echo "Done. Restart terminal 
+# add starship init to shell rc only if not already present
+grep -Fqx 'eval "$(starship init bash)"' ~/.bashrc 2>/dev/null || \
+    echo 'eval "$(starship init bash)"' >> ~/.bashrc
+
+if command -v zsh >/dev/null 2>&1; then
+    grep -Fqx 'eval "$(starship init zsh)"' ~/.zshrc 2>/dev/null || \
+        echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+fi
+
+echo "Done. Restart terminal."
