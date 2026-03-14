@@ -132,6 +132,7 @@ LOCAL_CAREER_NEWS      = LOCAL_JSON_DIR / "career_news.json"
 LOCAL_CREDS_PATH       = LOCAL_JSON_DIR / ".creds"
 LOCAL_BABEL_PATH       = LOCAL_JSON_DIR / "babel_draw.json.gz"
 LOCAL_MAKE_OFFLINE_PATH = LOCAL_JSON_DIR / ".make_offline.txt"
+LOCAL_S3_LISTING_STATS_PATH = LOCAL_JSON_DIR / ".s3_listing_stats.json"
 
 LOCAL_TEXT_HISTORY = LOCAL_JSON_DIR / ".text_history.json.gz" # THIS path is also mentioned in ins_adder.py (not imported to keep that fast) # has two keys, 'last_sync': ts and 'history': {hash: date}
 
@@ -1797,4 +1798,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
