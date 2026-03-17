@@ -97,10 +97,17 @@ LOCAL_TMP_DIR     = LOCAL_CL9_DIR / "tmp"
 LOCAL_FLAGS_DIR   = LOCAL_CL9_DIR / "flags"
 LOCAL_BAK_DIR     = LOCAL_CL9_DIR / "bak"
 LOCAL_DEV_DIR     = LOCAL_CL9_DIR / "dev"
+LOCAL_MAIN_DEV_DIR = LOCAL_MAIN_DIR / "dev"
 
 # non-cl9 roots
 LOCAL_MANY_DIR    = HOME / "many"
 LOCAL_SPEECH_DIR  = HOME / ".cache" / "cl9" / "speech"
+LOCAL_CL9_NATIVE_DIR = HOME / "cl9" / "native"
+SEP_NATIVE_DEV_BUILD_DIR = LOCAL_MAIN_DEV_DIR / "build"
+SEP_NATIVE_CMAKE_BUILD_DIR = (
+    LOCAL_MAIN_DEV_DIR / "cmake-build" if DEV_PC else LOCAL_CL9_NATIVE_DIR / ".cmake-build"
+)
+SEP_NATIVE_INSTALL_DIR = SEP_NATIVE_DEV_BUILD_DIR if DEV_PC else LOCAL_CL9_NATIVE_DIR
 
 
 # Bases
@@ -155,7 +162,7 @@ LOCAL_TERMUX_ST_REC_DIR  = LOCAL_TERMUX_REC_DIR / "Standard Recordings"
 
 # Flags
 
-SEPS_NATIVE_PENDING_FLAG = LOCAL_FLAGS_DIR / "seps_native.pending"
+SEP_NATIVE_PENDING_FLAG = LOCAL_FLAGS_DIR / "sep_native.pending"
 
 
 DIRS_TO_CREATE: tuple[Path] = (
@@ -169,6 +176,7 @@ DIRS_TO_CREATE: tuple[Path] = (
     LOCAL_JSON_DIR,
     LOCAL_MAIN_BASES_DIR,
     LOCAL_MAIN_DIR,
+    LOCAL_MAIN_DEV_DIR,
     LOCAL_MANY_DIR,
     LOCAL_PENDING_DIR,
     LOCAL_SCRIPTS_BU_DIR,
