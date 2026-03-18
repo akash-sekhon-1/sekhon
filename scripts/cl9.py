@@ -862,12 +862,14 @@ def _download_bytes_from_s3(bucket: str, key: S3Key, S3) -> bytes:
 def _extract_tgz_bytes_to_dir(tgz_bytes: bytes, dest_dir: Path) -> None:
     with io.BytesIO(tgz_bytes) as bio:
         with tarfile.open(fileobj=bio, mode="r:gz") as tf:
-            # Extract safely: force no absolute paths, no path traversal
             for member in tf.getmembers():
-                member_path = os.path.normpath(member.name).lstrip(os.sep)
-                if member_path.startswith(".."):
+                member_path = os.path.normpath(member.name)
+                if os.path.isabs(member_path) or member_path.startswith(".."):
                     raise RuntimeError(f"Unsafe path in tar: {member.name}")
-            tf.extractall(dest_dir, filter="data")
+                if member.issym() or member.islnk():
+                    continue
+                member.name = member_path.lstrip(os.sep)
+                tf.extract(member, dest_dir, set_attrs=True)
 
 # ----------------------------------------------------------------
 def get_file_s3(aws_key: S3Key, dest_name: Path, bucket_name: str, S3) -> bool:
