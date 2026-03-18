@@ -211,8 +211,65 @@ AWS_REQ_KEYS = {
 
     "GROQ_KEY": "API key of Groq LLM",
     "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)",
-    "SUDO_PASSWORD": "The sudo password for this device."
+    "SUDO_PASSWORD": "The sudo password for this device.",
+    "SEPS_HMAC_SECRET": "Shared HMAC secret for the SEPS server and client.",
+    "SEPS_SERVER_EMAIL": "Login email for the SEPS server.",
+    "SEPS_SERVER_PASSWORD": "Login password for the SEPS server.",
+    "SEPS_SERVER_IP": "Public IPv4 address of the SEPS EC2 server.",
+    "SEPS_SERVER_DOMAIN": "Public HTTPS hostname for the SEPS server. Example: sync.example.com or the EC2 public DNS name.",
+    "SEPS_SERVER_INSTANCE_ID": "EC2 instance ID for the SEPS server. Example: i-0123456789abcdef0",
+    "SEPS_SERVER_NAME": "EC2 Name tag used to resolve the SEPS server. Usually: seps_server",
 }
+
+CREDS_EXIT_WORDS = {"aban", "end", "exit", "ooo", "q", "quit"}
+CREDS_SHOW_FULL_KEYS = {
+    "PRIVATE_BUCKET_NAME",
+    "PRIVATE_BUCKET_REGION",
+    "SEPS_SERVER_IP",
+    "SEPS_SERVER_DOMAIN",
+    "SEPS_SERVER_INSTANCE_ID",
+    "SEPS_SERVER_NAME",
+}
+CREDS_SESSION_TIMEOUT_SEC = 10 * 60
+
+
+def _normalize_cred_lookup_key(text: str) -> str:
+    return text.strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def _build_cred_aliases() -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for key in AWS_REQ_KEYS:
+        short = key.removeprefix("PRIVATE_")
+        for variant in {key, key.lower(), short, short.lower()}:
+            aliases[_normalize_cred_lookup_key(variant)] = key
+    aliases[_normalize_cred_lookup_key("aws_access_key")] = "PRIVATE_AWS_ACCESS_KEY_ID"
+    aliases[_normalize_cred_lookup_key("aws_secret_key")] = "PRIVATE_AWS_SECRET_ACCESS_KEY"
+    aliases[_normalize_cred_lookup_key("bucket")] = "PRIVATE_BUCKET_NAME"
+    aliases[_normalize_cred_lookup_key("region")] = "PRIVATE_BUCKET_REGION"
+    aliases[_normalize_cred_lookup_key("github")] = "GITHUB_PAT"
+    aliases[_normalize_cred_lookup_key("groq")] = "GROQ_KEY"
+    aliases[_normalize_cred_lookup_key("sudo")] = "SUDO_PASSWORD"
+    aliases[_normalize_cred_lookup_key("seps_hmac")] = "SEPS_HMAC_SECRET"
+    aliases[_normalize_cred_lookup_key("hmac")] = "SEPS_HMAC_SECRET"
+    aliases[_normalize_cred_lookup_key("server_email")] = "SEPS_SERVER_EMAIL"
+    aliases[_normalize_cred_lookup_key("seps_email")] = "SEPS_SERVER_EMAIL"
+    aliases[_normalize_cred_lookup_key("email")] = "SEPS_SERVER_EMAIL"
+    aliases[_normalize_cred_lookup_key("server_password")] = "SEPS_SERVER_PASSWORD"
+    aliases[_normalize_cred_lookup_key("seps_password")] = "SEPS_SERVER_PASSWORD"
+    aliases[_normalize_cred_lookup_key("password")] = "SEPS_SERVER_PASSWORD"
+    aliases[_normalize_cred_lookup_key("server_ip")] = "SEPS_SERVER_IP"
+    aliases[_normalize_cred_lookup_key("ip")] = "SEPS_SERVER_IP"
+    aliases[_normalize_cred_lookup_key("server_domain")] = "SEPS_SERVER_DOMAIN"
+    aliases[_normalize_cred_lookup_key("domain")] = "SEPS_SERVER_DOMAIN"
+    aliases[_normalize_cred_lookup_key("instance_id")] = "SEPS_SERVER_INSTANCE_ID"
+    aliases[_normalize_cred_lookup_key("server_instance_id")] = "SEPS_SERVER_INSTANCE_ID"
+    aliases[_normalize_cred_lookup_key("server_name")] = "SEPS_SERVER_NAME"
+    aliases[_normalize_cred_lookup_key("instance_name")] = "SEPS_SERVER_NAME"
+    return aliases
+
+
+CREDS_KEY_ALIASES = _build_cred_aliases()
 
 
 AWS_SCRIPTS_PRE: S3Key  = "scripts/"
@@ -605,6 +662,15 @@ def get_creds() -> Optional[dict[str, str]]:
     if d is None:
         sys.exit(2)
     return d
+
+
+def _require_cred_value(creds: dict[str, str], key: str) -> str:
+    value = creds.get(key, "").strip()
+    if value:
+        return value
+    raise ValueError(
+        f"Missing credential `{key}`. Set it with `cl9 creds set {key}`."
+    )
     
 
 # --------------------------------------
@@ -615,49 +681,87 @@ def get_s3_bucket(creds: dict[str, str]):
         crint(f"boto3 is not installed. Please install it (python3 -m pip install boto3) or simply run {LOCAL_MAIN_DIR}/dispatch.py --deps.")
         crint('Please restart', 'yellow')
         sys.exit(0)
+    aws_access_key_id, aws_secret_access_key = get_access_secret_keys(creds)
+    region_name = get_region_name(creds)
+    bucket_name = get_bucket_name(creds)
     S3 = boto3.client(
         "s3",
-        aws_access_key_id     = creds["PRIVATE_AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key = creds["PRIVATE_AWS_SECRET_ACCESS_KEY"],
-        region_name           = creds["PRIVATE_BUCKET_REGION"]
+        aws_access_key_id     = aws_access_key_id,
+        aws_secret_access_key = aws_secret_access_key,
+        region_name           = region_name
     )
-    return S3, creds["PRIVATE_BUCKET_NAME"]
+    return S3, bucket_name
 
 
 def get_bucket_name(creds: dict[str, str]) -> str:
-    return creds["PRIVATE_BUCKET_NAME"]
+    return _require_cred_value(creds, "PRIVATE_BUCKET_NAME")
 
 def get_region_name(creds: dict[str, str]) -> str:
-    return creds["PRIVATE_BUCKET_REGION"]
+    return _require_cred_value(creds, "PRIVATE_BUCKET_REGION")
 
 def get_access_secret_keys(creds: dict[str, str]) -> tuple[str, str]:
-    return creds["PRIVATE_AWS_ACCESS_KEY_ID"], creds["PRIVATE_AWS_SECRET_ACCESS_KEY"]
+    return (
+        _require_cred_value(creds, "PRIVATE_AWS_ACCESS_KEY_ID"),
+        _require_cred_value(creds, "PRIVATE_AWS_SECRET_ACCESS_KEY"),
+    )
 
 def get_sudo_password(creds: dict[str, str]) -> str:
-    return creds["SUDO_PASSWORD"]
+    return _require_cred_value(creds, "SUDO_PASSWORD")
+
+
+def get_seps_hmac_secret(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_HMAC_SECRET")
+
+
+def get_seps_server_email(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_SERVER_EMAIL")
+
+
+def get_seps_server_password(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_SERVER_PASSWORD")
+
+
+def get_seps_server_ip(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_SERVER_IP")
+
+
+def get_seps_server_domain(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_SERVER_DOMAIN")
+
+
+def get_seps_server_instance_id(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_SERVER_INSTANCE_ID")
+
+
+def get_seps_server_name(creds: dict[str, str]) -> str:
+    return _require_cred_value(creds, "SEPS_SERVER_NAME")
 
 # ----------------------------
 def get_lambda(creds: dict):
     import boto3
+    aws_access_key_id, aws_secret_access_key = get_access_secret_keys(creds)
+    region_name = get_region_name(creds)
     
     lambda_client = boto3.client(
         'lambda',
-        aws_access_key_id=creds["PRIVATE_AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=creds["PRIVATE_AWS_SECRET_ACCESS_KEY"],
-        region_name=creds["PRIVATE_BUCKET_REGION"]
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        region_name=region_name
     )
     return lambda_client
 
 
 # -----------------------------------
 def get_groq(creds: dict[str, str]) -> str:
-    return creds["GROQ_KEY"]
+    return _require_cred_value(creds, "GROQ_KEY")
 
 
 def get_gh_pat(creds: dict[str, str]) -> str:
-    return creds["GITHUB_PAT"]
+    return _require_cred_value(creds, "GITHUB_PAT")
 
 
+def get_ec2_client():
+    ...
 
 
 
@@ -1469,6 +1573,10 @@ def derive_key(password: str, salt: bytes) -> bytes:
 def encrypt_dict(d: Dict, password: str) -> bytes:
     salt = os.urandom(SALT_LEN)
     key = derive_key(password, salt)
+    return _encrypt_dict_with_key(d, key, salt)
+
+
+def _encrypt_dict_with_key(d: Dict, key: bytes, salt: bytes) -> bytes:
     nonce = os.urandom(NONCE_LEN)
 
     plaintext = json.dumps(d, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -1502,6 +1610,419 @@ def decrypt_blob(blob: bytes, password: str) -> dict:
     return d
 
 
+def _normalize_creds_dict(data: dict) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for key, value in data.items():
+        if value is None:
+            continue
+        out[str(key)] = str(value).strip()
+    return out
+
+
+def _extract_creds_salt(blob: bytes) -> bytes:
+    if len(blob) < len(MAGIC) + SALT_LEN + NONCE_LEN + 16 + 1:
+        raise ValueError("File too short / corrupted")
+    if blob[:4] != MAGIC:
+        raise ValueError("Bad magic/version. Not a cl9 creds file or corrupted.")
+    return blob[4:4+SALT_LEN]
+
+
+def _missing_required_cred_keys(creds: dict[str, str]) -> list[str]:
+    return [key for key in AWS_REQ_KEYS if not creds.get(key, "").strip()]
+
+
+def _preview_cred_value(key: str, value: str) -> str:
+    if not value:
+        return "[missing]"
+    if key in CREDS_SHOW_FULL_KEYS:
+        return value
+    if len(value) <= 4:
+        return "*" * len(value)
+    if len(value) <= 15:
+        return f"{value[:2]}...{value[-2:]}"
+    return f"{value[:4]}...{value[-4:]} (len={len(value)})"
+
+
+def _colorize_cred_status(value: str) -> str:
+    return clz("saved", "green") if value else clz("missing", "red")
+
+
+def _colorize_cred_preview(key: str, value: str) -> str:
+    preview = _preview_cred_value(key, value)
+    if not value:
+        return clz(preview, "red")
+    if key in CREDS_SHOW_FULL_KEYS:
+        return clz(preview, "cyan")
+    return clz(preview, "yellow")
+
+
+def _print_cred_entry(idx: int, key: str, value: str, description: str) -> None:
+    index_label = clz(f"[{idx:>2}]", "yellow")
+    key_label = clz(f"{key:<30}", "magenta" if not value else "cyan")
+    status_label = _colorize_cred_status(value)
+    preview_label = _colorize_cred_preview(key, value)
+    print(f"  {index_label} {key_label} {status_label} {preview_label}")
+    print(f"      {clz(description, 'orange')}")
+
+
+def _resolve_cred_key(field: str, existing_keys: list[str] | None = None) -> str:
+    normalized = _normalize_cred_lookup_key(field)
+    if normalized in CREDS_KEY_ALIASES:
+        return CREDS_KEY_ALIASES[normalized]
+    if existing_keys:
+        for key in existing_keys:
+            if _normalize_cred_lookup_key(key) == normalized:
+                return key
+    raise KeyError(field)
+
+
+def _resolve_cred_fields(fields: list[str], existing: dict[str, str] | None = None) -> list[str]:
+    resolved: list[str] = []
+    existing_keys = list(existing or {})
+    for field in fields:
+        key = _resolve_cred_key(field, existing_keys)
+        if key not in resolved:
+            resolved.append(key)
+    return resolved
+
+
+def _print_creds_preview(creds: dict[str, str], keys: list[str] | None = None) -> None:
+    req_keys = keys or list(AWS_REQ_KEYS)
+    saved_count = sum(1 for key in req_keys if creds.get(key, "").strip())
+    missing_count = len(req_keys) - saved_count
+    print()
+    crint("Saved creds preview", "cyan")
+    print(f"  {clz(str(saved_count), 'green')} saved   {clz(str(missing_count), 'red')} missing")
+    for idx, key in enumerate(req_keys, 1):
+        print()
+        value = creds.get(key, "").strip()
+        _print_cred_entry(idx, key, value, AWS_REQ_KEYS.get(key, "Saved value"))
+
+    extra_keys = sorted(key for key in creds if key not in AWS_REQ_KEYS and (keys is None or key in keys))
+    if extra_keys:
+        print()
+        crint("Extra saved fields", "cyan")
+        for idx, key in enumerate(extra_keys, start=len(req_keys) + 1):
+            value = creds.get(key, "").strip()
+            _print_cred_entry(idx, key, value, "Saved value")
+
+    missing = _missing_required_cred_keys(creds)
+    print()
+    if missing:
+        crint(f"Missing required fields: {', '.join(missing)}", "red")
+    else:
+        crint("All required fields are saved.", "green")
+
+
+def _write_creds_blob(blob: bytes, out_path: Path = LOCAL_CREDS_PATH) -> None:
+    tmp_path = out_path.parent / f"{out_path.name}.tmp"
+    with open(tmp_path, "wb") as f:
+        f.write(blob)
+        f.flush()
+        os.fsync(f.fileno())
+    tmp_path.replace(out_path)
+
+
+def _prompt_new_creds_password() -> str | None:
+    min_len = 10
+    while True:
+        password = _prompt_password("Encryption password: ")
+        if password.lower() in CREDS_EXIT_WORDS:
+            return None
+        if len(password) < min_len:
+            output(f"Password is too short. It should be at least {min_len} digits. Try Again ...")
+            continue
+
+        confirm = _prompt_password("Confirm password: ")
+        if confirm.lower() in CREDS_EXIT_WORDS:
+            return None
+        if password != confirm:
+            print("Passwords do not match. Try Again...")
+            continue
+        return password
+
+
+def _save_creds_data(
+    creds: dict[str, str],
+    key: bytes | None = None,
+    salt: bytes | None = None,
+) -> tuple[bytes, bytes] | None:
+    clean_creds = _normalize_creds_dict(creds)
+    if key is None or salt is None:
+        password = _prompt_new_creds_password()
+        if password is None:
+            return None
+        blob = encrypt_dict(clean_creds, password)
+        salt = _extract_creds_salt(blob)
+        key = derive_key(password, salt)
+        _store_key_cache(key)
+    else:
+        blob = _encrypt_dict_with_key(clean_creds, key, salt)
+        _store_key_cache(key)
+
+    _write_creds_blob(blob)
+    output(f"\nSaved {len(clean_creds)} entries to encrypted file: {LOCAL_CREDS_PATH}")
+    return key, salt
+
+
+def _format_creds_timeout(remaining_sec: int, timeout_at: datetime.datetime) -> str:
+    minutes, seconds = divmod(max(0, remaining_sec), 60)
+    return f"{minutes:02d}:{seconds:02d} remaining, timeout at {timeout_at:%H:%M}"
+
+
+def _remaining_creds_session_seconds(deadline_mono: float) -> int:
+    return max(0, int(deadline_mono - time.monotonic()))
+
+
+def _creds_session_expired(deadline_mono: float) -> bool:
+    return time.monotonic() >= deadline_mono
+
+# MARK: Creds Editor
+def _print_creds_editor_menu(
+    creds: dict[str, str],
+    keys: list[str],
+    deadline_mono: float,
+    timeout_at: datetime.datetime,
+) -> None:
+    saved_count = sum(1 for key in keys if creds.get(key, "").strip())
+    missing_count = len(keys) - saved_count
+    print()
+    crint(f"Creds session: {_format_creds_timeout(_remaining_creds_session_seconds(deadline_mono), timeout_at)}", "yellow")
+    print(f"  {clz(str(saved_count), 'green')} saved   {clz(str(missing_count), 'red')} missing")
+    crint("Select an index to edit that field. Use q/quit/exit to stop.", "cyan")
+    print()
+    for idx, key in enumerate(keys, start=1):
+        value = creds.get(key, "").strip()
+        _print_cred_entry(idx, key, value, AWS_REQ_KEYS.get(key, "Saved value"))
+    print()
+
+
+def _prompt_for_cred_value_timed(
+    key: str,
+    current_value: str | None,
+    deadline_mono: float,
+    timeout_at: datetime.datetime,
+) -> tuple[str, str | None]:
+    description = AWS_REQ_KEYS.get(key, f"Saved value for {key}")
+    while True:
+        if _creds_session_expired(deadline_mono):
+            crint("Creds session expired after 10 minutes. Start `python3 cl9.py creds config` again.", "red")
+            return "expired", None
+
+        print()
+        crint(f"Editing {key}", "magenta")
+        crint(f"Creds session: {_format_creds_timeout(_remaining_creds_session_seconds(deadline_mono), timeout_at)}", "yellow")
+        if current_value:
+            print(f"Current: {_preview_cred_value(key, current_value)}")
+            line = _prompt_line(f"{description} [Enter keeps current]: ").strip()
+            if _creds_session_expired(deadline_mono):
+                crint("Creds session expired before this update could be applied.", "red")
+                return "expired", None
+            if not line:
+                return "ok", current_value
+        else:
+            line = _prompt_line(f"{description}: ").strip()
+            if _creds_session_expired(deadline_mono):
+                crint("Creds session expired before this update could be applied.", "red")
+                return "expired", None
+            if not line:
+                crint("This value is required. Type it, or exit with q/quit/exit.", "yellow")
+                continue
+
+        lowered = line.lower()
+        if lowered in CREDS_EXIT_WORDS:
+            return "quit", None
+        if line == "p":
+            _tmp = getclip()
+            if _tmp is None:
+                crint("Pasting is not possible. Type the value manually.", "red")
+                continue
+            line = _tmp.strip()
+            preview = _preview_cred_value(key, line)
+            if _prompt_line(f"Use clipboard value {preview}? (y/n): ").strip().lower() != "y":
+                continue
+        if not line:
+            crint("Empty values are not allowed.", "yellow")
+            continue
+        return "ok", line
+
+
+def _prompt_for_cred_value(key: str, current_value: str | None = None) -> str | None:
+    description = AWS_REQ_KEYS.get(key, f"Saved value for {key}")
+    while True:
+        print()
+        crint(key, "magenta")
+        if current_value:
+            print(f"Current: {_preview_cred_value(key, current_value)}")
+            line = _prompt_line(f"{description} [Enter keeps current]: ").strip()
+            if not line:
+                return current_value
+        else:
+            line = _prompt_line(f"{description}: ").strip()
+            if not line:
+                crint("This value is required. Type it, or exit with aban/exit/end/ooo.", "yellow")
+                continue
+
+        if line.lower() in CREDS_EXIT_WORDS:
+            return None
+        if line == "p":
+            _tmp = getclip()
+            if _tmp is None:
+                crint("Pasting is not possible. Type the value manually.", "red")
+                continue
+            line = _tmp.strip()
+            preview = _preview_cred_value(key, line)
+            if _prompt_line(f"Use clipboard value {preview}? (y/n): ").strip().lower() != "y":
+                continue
+        if not line:
+            crint("Empty values are not allowed.", "yellow")
+            continue
+        return line
+
+
+def _load_creds_store() -> Optional[tuple[dict[str, str], bytes, bytes]]:
+    in_path = LOCAL_CREDS_PATH
+    if not in_path.is_file():
+        return None
+
+    with open(in_path, "rb") as f:
+        blob = f.read()
+
+    try:
+        salt = _extract_creds_salt(blob)
+    except ValueError as e:
+        crint(str(e), "red")
+        sys.exit(2)
+
+    cached_key = _load_key_cache()
+    if cached_key:
+        try:
+            data = _normalize_creds_dict(_decrypt_with_cached_key(blob, cached_key))
+            refresh_cached_key()
+            return data, cached_key, salt
+        except Exception:
+            pass
+
+    password = _prompt_password(f"{PROGRAM_NAME} Password: ")
+    if not password:
+        print("Empty password not allowed. Exiting.")
+        sys.exit(2)
+    if password == "reset":
+        if _prompt_line("Are you sure you want to reset your password by deleting the existing credentials? (y/n) ") == "y":
+            in_path.unlink()
+            crint("Password Reset Successful. Please launch the Program again.", "green")
+            sys.exit(0)
+        crint("Not Reseting", "red")
+        sys.exit(0)
+
+    key = derive_key(password, salt)
+    try:
+        data = _normalize_creds_dict(_decrypt_with_cached_key(blob, key))
+    except Exception:
+        print("Incorrect Password")
+        sys.exit(2)
+
+    _store_key_cache(key)
+    return data, key, salt
+
+
+def _configure_creds_interactive(
+    selected_keys: list[str] | None = None,
+    existing: dict[str, str] | None = None,
+    key: bytes | None = None,
+    salt: bytes | None = None,
+) -> bool:
+    working = dict(existing or {})
+    keys_to_edit = selected_keys or list(AWS_REQ_KEYS)
+
+    output("Type 'p' to get the value directly from the clipboard (works on termux if termux-api is installed)")
+    if existing:
+        output("Press Enter to keep the current saved value.")
+        _print_creds_preview(working)
+
+    changed_keys: list[str] = []
+    for cred_key in keys_to_edit:
+        current_value = working.get(cred_key, "").strip() or None
+        new_value = _prompt_for_cred_value(cred_key, current_value=current_value)
+        if new_value is None:
+            return False
+        if new_value != working.get(cred_key, "").strip():
+            working[cred_key] = new_value
+            changed_keys.append(cred_key)
+
+    if not changed_keys and existing:
+        output("No changes made.")
+        return True
+
+    if _save_creds_data(working, key=key, salt=salt) is None:
+        return False
+
+    print()
+    crint("Updated fields: " + ", ".join(changed_keys or keys_to_edit), "green")
+    _print_creds_preview(working)
+    return True
+
+
+def _configure_creds_menu(
+    selected_keys: list[str],
+    existing: dict[str, str] | None = None,
+    key: bytes | None = None,
+    salt: bytes | None = None,
+) -> bool:
+    working = dict(existing or {})
+    deadline_mono = time.monotonic() + CREDS_SESSION_TIMEOUT_SEC
+    timeout_at = datetime.datetime.now() + datetime.timedelta(seconds=CREDS_SESSION_TIMEOUT_SEC)
+
+    output("Type 'p' to paste from the clipboard while editing a selected field.")
+    while True:
+        if _creds_session_expired(deadline_mono):
+            crint("Creds session expired after 10 minutes. Start `python3 cl9.py creds config` again.", "red")
+            return False
+
+        _print_creds_editor_menu(working, selected_keys, deadline_mono, timeout_at)
+        choice = _prompt_line("Select field index to edit, or q/quit/exit: ").strip()
+        if _creds_session_expired(deadline_mono):
+            crint("Creds session expired after 10 minutes. Start `python3 cl9.py creds config` again.", "red")
+            return False
+
+        lowered = choice.lower()
+        if lowered in CREDS_EXIT_WORDS:
+            output("Leaving creds editor.")
+            return True
+        if not choice.isdigit():
+            crint("Enter a valid index number, or q/quit/exit.", "yellow")
+            continue
+
+        index = int(choice)
+        if index < 1 or index > len(selected_keys):
+            crint("That index is out of range.", "yellow")
+            continue
+
+        selected_key = selected_keys[index - 1]
+        current_value = working.get(selected_key, "").strip() or None
+        status, new_value = _prompt_for_cred_value_timed(
+            selected_key,
+            current_value=current_value,
+            deadline_mono=deadline_mono,
+            timeout_at=timeout_at,
+        )
+        if status == "quit":
+            output("Leaving creds editor.")
+            return True
+        if status == "expired":
+            return False
+        if new_value == working.get(selected_key, "").strip():
+            crint(f"No change for {selected_key}.", "yellow")
+            continue
+
+        working[selected_key] = new_value or ""
+        saved = _save_creds_data(working, key=key, salt=salt)
+        if saved is None:
+            return False
+        key, salt = saved
+        crint(f"Updated {selected_key}.", "green")
+
+
 
 
 
@@ -1511,127 +2032,21 @@ def decrypt_blob(blob: bytes, password: str) -> dict:
 
 # ------------------------------------------------------------
 def coder_main() -> bool:
-    output("Type 'p' to get the value directly from the clipboard (works on termux if termux-api is installed)")
-
-    d = {}
-    exits = ['aban', 'exit', 'end', 'ooo']
-    for k in AWS_REQ_KEYS:
-        while True:
-            print()
-            crint(k, 'magenta')
-            line = _prompt_line(f"{AWS_REQ_KEYS[k]}: ").strip()
-            if line.lower() in exits:
-                return False
-            if line == 'p':
-                _tmp = getclip()
-                if _tmp is None:
-                    crint("Pasting is not possible. Type", 'red')
-                    continue
-                line = _tmp.strip()
-                if _prompt_line(f"Are you sure about {line[:3]}......{line[-3:]}? (y/n): ").strip().lower() != 'y':
-                    continue
-            if not line:
-                continue
-            break
-        d[k] = line
-
-
-    if not d:
-        print("No valid key/value pairs collected. Exiting.")
-        return False
-
-    out_path = LOCAL_CREDS_PATH
-
-    min_len = 10
-    while True:
-        password = _prompt_password("Encryption password: ")
-        if len(password) < min_len:
-            output(f"Password is too short. It should be at least {min_len} digits. Try Again ...")
-            continue
-        
-        if password in exits:
-            return False
-    
-        confirm = _prompt_password("Confirm password: ")
-        if confirm in exits:
-            return False
-        if password != confirm:
-            print("Passwords do not match. Try Again...")
-            continue
-        break
-
-    blob = encrypt_dict(d, password)
-    tmp_path = out_path.parent / f"{out_path.name}.tmp"
-
-    # atomic-ish write
-    with open(tmp_path, "wb") as f:
-        f.write(blob)
-        f.flush()
-        os.fsync(f.fileno())
-    tmp_path.replace(out_path)
-
-    output(f"\nSaved {len(d)} entries to encrypted file: {out_path}")
-    return True
+    return _configure_creds_interactive(list(AWS_REQ_KEYS))
 
 
 # ---------------------------------------------
 def decoder_main() -> Optional[dict[str, str]]:
-    in_path = LOCAL_CREDS_PATH
-
-    if not in_path.is_file():
+    store = _load_creds_store()
+    if store is None:
         print("File not found.")
         if not coder_main():
             print("Exitting")
             sys.exit(2)
-
-    with open(in_path, "rb") as f:
-        blob = f.read()
-
-
-    cached_key = _load_key_cache()
-    if cached_key:
-        try:
-            d = _decrypt_with_cached_key(blob, cached_key)
-            if not all(k in d for k in AWS_REQ_KEYS):
-                crint("The creds file have invalid keys. Removing it.", 'red')
-                in_path.unlink()
-                sys.exit(2)
-            refresh_cached_key()
-            return d
-        except:
-            pass # fall back to asking password
-
-
-    password = _prompt_password(f"{PROGRAM_NAME} Password: ")
-    if not password:
-        print("Empty password not allowed. Exiting.")
-        return
-    if password == 'reset':
-        if _prompt_line("Are you sure you want to reset your password by deleting the existing credentials? (y/n) ") == 'y':
-            in_path.unlink()
-            crint("Password Reset Successful. Please launch the Program again.", 'green')
-            sys.exit(0)
-        else:
-            crint("Not Reseting", 'red')
-            sys.exit(0)
-
-    salt = blob[4:4+SALT_LEN]
-    key = derive_key(password, salt)
-
-    try:
-        d = _aes_gcm_decrypt(key, blob[4+SALT_LEN:4+SALT_LEN+NONCE_LEN], blob[4+SALT_LEN+NONCE_LEN:], MAGIC)
-    except:
-        print("Incorrect Password")
-        sys.exit(2)
-
-    _store_key_cache(key)
-    d: dict[str, str] = json.loads(d.decode())
-    if not all(k in d for k in AWS_REQ_KEYS):
-        crint("The creds file have invalid keys. Removing it.", 'red')
-        os.remove(in_path)
-        sys.exit(2)
-
-    return {key: value.strip() for key, value in d.items()}
+        store = _load_creds_store()
+        if store is None:
+            sys.exit(2)
+    return store[0]
 
 
 # -----------------------
@@ -1672,6 +2087,68 @@ def invalidate_cache():
 
     if not removed:
         print("No cache present.")
+
+
+def _run_creds_command(argv: list[str]) -> None:
+    parser = argparse.ArgumentParser(
+        prog="cl9 creds",
+        description="Inspect and update encrypted creds without re-entering everything.",
+    )
+    subparsers = parser.add_subparsers(dest="creds_action")
+
+    list_parser = subparsers.add_parser("list", help="Show all saved fields with previews")
+    list_parser.add_argument("fields", nargs="*", help="Optional field names to preview")
+
+    show_parser = subparsers.add_parser("show", help="Alias for list")
+    show_parser.add_argument("fields", nargs="*", help="Optional field names to preview")
+
+    config_parser = subparsers.add_parser("config", help="Open the creds editor for all fields or selected ones")
+    config_parser.add_argument("fields", nargs="*", metavar="field", help="Optional field names to include in the editor")
+
+    set_parser = subparsers.add_parser("set", help="Alias for config")
+    set_parser.add_argument("fields", nargs="*", metavar="field", help="Optional field names to include in the editor")
+
+    args = parser.parse_args(argv)
+    action = args.creds_action or "list"
+    fields = getattr(args, "fields", [])
+
+    if action in {"list", "show"}:
+        store = _load_creds_store()
+        if store is None:
+            crint("No creds file found yet. Run `python3 cl9.py creds config` to create it.", "yellow")
+            return
+        creds, _, _ = store
+        try:
+            keys = _resolve_cred_fields(fields, creds) if fields else None
+        except KeyError as e:
+            crint(f"Unknown creds field: {e.args[0]}", "red")
+            sys.exit(2)
+        _print_creds_preview(creds, keys)
+        return
+
+    if action in {"config", "set"}:
+        store = _load_creds_store()
+        if store is None:
+            creds: dict[str, str] = {}
+            key = None
+            salt = None
+        else:
+            creds, key, salt = store
+
+        try:
+            selected_keys = _resolve_cred_fields(fields, creds) if fields else list(AWS_REQ_KEYS)
+        except KeyError as e:
+            crint(f"Unknown creds field: {e.args[0]}", "red")
+            print("Available fields:")
+            for field in AWS_REQ_KEYS:
+                print(f"  {field}")
+            sys.exit(2)
+
+        if not _configure_creds_menu(selected_keys, existing=creds, key=key, salt=salt):
+            sys.exit(2)
+        return
+
+    parser.print_help()
 
 
 
@@ -1774,9 +2251,14 @@ def is_offline() -> tuple[bool, str]:
 
 
 def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] == "creds":
+        _run_creds_command(sys.argv[2:])
+        return
+
     parser = argparse.ArgumentParser(
         prog = "cl9",
-        description = "The cl9 Learning System"
+        description = "The cl9 Learning System",
+        epilog = "Creds commands: python3 cl9.py creds [list|show|config|set]"
     )
 
     actions = parser.add_mutually_exclusive_group(required=True)
