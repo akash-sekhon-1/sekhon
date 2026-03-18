@@ -212,6 +212,7 @@ AWS_REQ_KEYS = {
     "GROQ_KEY": "API key of Groq LLM",
     "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)",
     "SUDO_PASSWORD": "The sudo password for this device.",
+    "SEP_SERVER_KEY": "The API key to access the sep-server"
 }
 
 CREDS_EXIT_WORDS = {"aban", "end", "exit", "ooo", "q", "quit"}
@@ -239,14 +240,6 @@ def _build_cred_aliases() -> dict[str, str]:
     aliases[_normalize_cred_lookup_key("github")] = "GITHUB_PAT"
     aliases[_normalize_cred_lookup_key("groq")] = "GROQ_KEY"
     aliases[_normalize_cred_lookup_key("sudo")] = "SUDO_PASSWORD"
-    aliases[_normalize_cred_lookup_key("seps_hmac")] = "SEPS_HMAC_SECRET"
-    aliases[_normalize_cred_lookup_key("hmac")] = "SEPS_HMAC_SECRET"
-    aliases[_normalize_cred_lookup_key("server_email")] = "SEPS_SERVER_EMAIL"
-    aliases[_normalize_cred_lookup_key("seps_email")] = "SEPS_SERVER_EMAIL"
-    aliases[_normalize_cred_lookup_key("email")] = "SEPS_SERVER_EMAIL"
-    aliases[_normalize_cred_lookup_key("server_password")] = "SEPS_SERVER_PASSWORD"
-    aliases[_normalize_cred_lookup_key("seps_password")] = "SEPS_SERVER_PASSWORD"
-    aliases[_normalize_cred_lookup_key("password")] = "SEPS_SERVER_PASSWORD"
     return aliases
 
 
@@ -754,6 +747,14 @@ class Creds:
         self.set("GROQ_KEY", value)
 
     @property
+    def sep_server_key(self) -> str | None:
+        return self.get("SEP_SERVER_KEY") 
+    
+    @sep_server_key.setter
+    def sep_server_key(self, value: str | None) -> None:
+        self.set("SEP_SERVER_KEY", value)
+
+    @property
     def github_pat(self) -> str | None:
         return self.get("GITHUB_PAT")
 
@@ -769,29 +770,6 @@ class Creds:
     def sudo_password(self, value: str | None) -> None:
         self.set("SUDO_PASSWORD", value)
 
-    @property
-    def seps_hmac_secret(self) -> str | None:
-        return self.get("SEPS_HMAC_SECRET")
-
-    @seps_hmac_secret.setter
-    def seps_hmac_secret(self, value: str | None) -> None:
-        self.set("SEPS_HMAC_SECRET", value)
-
-    @property
-    def server_email(self) -> str | None:
-        return self.get("SEPS_SERVER_EMAIL")
-
-    @server_email.setter
-    def server_email(self, value: str | None) -> None:
-        self.set("SEPS_SERVER_EMAIL", value)
-
-    @property
-    def server_password(self) -> str | None:
-        return self.get("SEPS_SERVER_PASSWORD")
-
-    @server_password.setter
-    def server_password(self, value: str | None) -> None:
-        self.set("SEPS_SERVER_PASSWORD", value)
 
 _CREDS_SINGLETON: Creds | None = None
 
