@@ -36,7 +36,7 @@ from getpass import getuser
 from pathlib import Path
 from socket import gethostname
 from textwrap import fill
-from typing import Dict, NewType, Optional
+from typing import Callable, Dict, Mapping, NewType, Optional
 
 
 
@@ -212,23 +212,12 @@ AWS_REQ_KEYS = {
     "GROQ_KEY": "API key of Groq LLM",
     "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)",
     "SUDO_PASSWORD": "The sudo password for this device.",
-    "SEPS_HMAC_SECRET": "Shared HMAC secret for the SEPS server and client.",
-    "SEPS_SERVER_EMAIL": "Login email for the SEPS server.",
-    "SEPS_SERVER_PASSWORD": "Login password for the SEPS server.",
-    "SEPS_SERVER_IP": "Public IPv4 address of the SEPS EC2 server.",
-    "SEPS_SERVER_DOMAIN": "Public HTTPS hostname for the SEPS server. Example: sync.example.com or the EC2 public DNS name.",
-    "SEPS_SERVER_INSTANCE_ID": "EC2 instance ID for the SEPS server. Example: i-0123456789abcdef0",
-    "SEPS_SERVER_NAME": "EC2 Name tag used to resolve the SEPS server. Usually: seps_server",
 }
 
 CREDS_EXIT_WORDS = {"aban", "end", "exit", "ooo", "q", "quit"}
 CREDS_SHOW_FULL_KEYS = {
     "PRIVATE_BUCKET_NAME",
     "PRIVATE_BUCKET_REGION",
-    "SEPS_SERVER_IP",
-    "SEPS_SERVER_DOMAIN",
-    "SEPS_SERVER_INSTANCE_ID",
-    "SEPS_SERVER_NAME",
 }
 CREDS_SESSION_TIMEOUT_SEC = 10 * 60
 
@@ -258,14 +247,6 @@ def _build_cred_aliases() -> dict[str, str]:
     aliases[_normalize_cred_lookup_key("server_password")] = "SEPS_SERVER_PASSWORD"
     aliases[_normalize_cred_lookup_key("seps_password")] = "SEPS_SERVER_PASSWORD"
     aliases[_normalize_cred_lookup_key("password")] = "SEPS_SERVER_PASSWORD"
-    aliases[_normalize_cred_lookup_key("server_ip")] = "SEPS_SERVER_IP"
-    aliases[_normalize_cred_lookup_key("ip")] = "SEPS_SERVER_IP"
-    aliases[_normalize_cred_lookup_key("server_domain")] = "SEPS_SERVER_DOMAIN"
-    aliases[_normalize_cred_lookup_key("domain")] = "SEPS_SERVER_DOMAIN"
-    aliases[_normalize_cred_lookup_key("instance_id")] = "SEPS_SERVER_INSTANCE_ID"
-    aliases[_normalize_cred_lookup_key("server_instance_id")] = "SEPS_SERVER_INSTANCE_ID"
-    aliases[_normalize_cred_lookup_key("server_name")] = "SEPS_SERVER_NAME"
-    aliases[_normalize_cred_lookup_key("instance_name")] = "SEPS_SERVER_NAME"
     return aliases
 
 
@@ -652,38 +633,200 @@ def _prompt_password(msg: str) -> str:
 # ===========================
 
 
-# ------------------------------------------
-def get_creds() -> Optional[dict[str, str]]:
+class Creds:
+    """Lazy credential wrapper around the encrypted creds store."""
+
+    def __init__(
+        self,
+        initial: Mapping[str, str] | None = None,
+        *,
+        loader: Callable[[], dict[str, str]] | None = None,
+    ) -> None:
+        self._data: dict[str, str] | None
+        if initial is None and loader is not None:
+            self._data = None
+        else:
+            self._data = _normalize_creds_dict(dict(initial or {}))
+        self._loader = loader
+
+    def _ensure_loaded(self) -> dict[str, str]:
+        if self._data is None:
+            loaded = self._loader() if self._loader is not None else {}
+            self._data = _normalize_creds_dict(loaded)
+        return self._data
+
+    def get(self, key: str, default: str | None = None) -> str | None:
+        value = self._ensure_loaded().get(key)
+        if value is None or not value.strip():
+            return default
+        return value.strip()
+
+    def set(self, key: str, value: str | None) -> None:
+        data = self._ensure_loaded()
+        if value is None:
+            data.pop(key, None)
+            return
+        cleaned = str(value).strip()
+        if cleaned:
+            data[key] = cleaned
+        else:
+            data.pop(key, None)
+
+    def update(self, other: Mapping[str, str]) -> None:
+        for key, value in other.items():
+            self.set(str(key), str(value))
+
+    def to_dict(self) -> dict[str, str]:
+        return dict(self._ensure_loaded())
+
+    def items(self):
+        return self._ensure_loaded().items()
+
+    def keys(self):
+        return self._ensure_loaded().keys()
+
+    def values(self):
+        return self._ensure_loaded().values()
+
+    def __iter__(self):
+        return iter(self._ensure_loaded())
+
+    def __len__(self) -> int:
+        return len(self._ensure_loaded())
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._ensure_loaded()
+
+    @property
+    def aws_access_key_id(self) -> str | None:
+        return self.get("PRIVATE_AWS_ACCESS_KEY_ID")
+
+    @aws_access_key_id.setter
+    def aws_access_key_id(self, value: str | None) -> None:
+        self.set("PRIVATE_AWS_ACCESS_KEY_ID", value)
+
+    @property
+    def access_key_id(self) -> str | None:
+        return self.aws_access_key_id
+
+    @access_key_id.setter
+    def access_key_id(self, value: str | None) -> None:
+        self.aws_access_key_id = value
+
+    @property
+    def aws_secret_access_key(self) -> str | None:
+        return self.get("PRIVATE_AWS_SECRET_ACCESS_KEY")
+
+    @aws_secret_access_key.setter
+    def aws_secret_access_key(self, value: str | None) -> None:
+        self.set("PRIVATE_AWS_SECRET_ACCESS_KEY", value)
+
+    @property
+    def secret_access_key(self) -> str | None:
+        return self.aws_secret_access_key
+
+    @secret_access_key.setter
+    def secret_access_key(self, value: str | None) -> None:
+        self.aws_secret_access_key = value
+
+    @property
+    def bucket_name(self) -> str | None:
+        return self.get("PRIVATE_BUCKET_NAME")
+
+    @bucket_name.setter
+    def bucket_name(self, value: str | None) -> None:
+        self.set("PRIVATE_BUCKET_NAME", value)
+
+    @property
+    def region_name(self) -> str | None:
+        return self.get("PRIVATE_BUCKET_REGION")
+
+    @region_name.setter
+    def region_name(self, value: str | None) -> None:
+        self.set("PRIVATE_BUCKET_REGION", value)
+
+    @property
+    def groq_key(self) -> str | None:
+        return self.get("GROQ_KEY")
+
+    @groq_key.setter
+    def groq_key(self, value: str | None) -> None:
+        self.set("GROQ_KEY", value)
+
+    @property
+    def github_pat(self) -> str | None:
+        return self.get("GITHUB_PAT")
+
+    @github_pat.setter
+    def github_pat(self, value: str | None) -> None:
+        self.set("GITHUB_PAT", value)
+
+    @property
+    def sudo_password(self) -> str | None:
+        return self.get("SUDO_PASSWORD")
+
+    @sudo_password.setter
+    def sudo_password(self, value: str | None) -> None:
+        self.set("SUDO_PASSWORD", value)
+
+    @property
+    def seps_hmac_secret(self) -> str | None:
+        return self.get("SEPS_HMAC_SECRET")
+
+    @seps_hmac_secret.setter
+    def seps_hmac_secret(self, value: str | None) -> None:
+        self.set("SEPS_HMAC_SECRET", value)
+
+    @property
+    def server_email(self) -> str | None:
+        return self.get("SEPS_SERVER_EMAIL")
+
+    @server_email.setter
+    def server_email(self, value: str | None) -> None:
+        self.set("SEPS_SERVER_EMAIL", value)
+
+    @property
+    def server_password(self) -> str | None:
+        return self.get("SEPS_SERVER_PASSWORD")
+
+    @server_password.setter
+    def server_password(self, value: str | None) -> None:
+        self.set("SEPS_SERVER_PASSWORD", value)
+
+_CREDS_SINGLETON: Creds | None = None
+
+
+def _load_current_creds_dict() -> dict[str, str]:
     if not LOCAL_CREDS_PATH.is_file():
         if not coder_main():
             sys.exit(2)
-    
-    d = decoder_main()
-    if d is None:
+
+    data = decoder_main()
+    if data is None:
         sys.exit(2)
-    return d
+    return data
 
 
-def _require_cred_value(creds: dict[str, str], key: str) -> str:
-    value = creds.get(key, "").strip()
-    if value:
-        return value
-    raise ValueError(
-        f"Missing credential `{key}`. Set it with `cl9 creds set {key}`."
-    )
+# ------------------------------------------
+def get_creds() -> Creds:
+    global _CREDS_SINGLETON
+    if _CREDS_SINGLETON is None:
+        _CREDS_SINGLETON = Creds(loader=_load_current_creds_dict)
+    return _CREDS_SINGLETON
     
 
 # --------------------------------------
-def get_s3_bucket(creds: dict[str, str]):
+def get_s3_bucket(creds: Creds):
     try:
         import boto3
     except ModuleNotFoundError:
         crint(f"boto3 is not installed. Please install it (python3 -m pip install boto3) or simply run {LOCAL_MAIN_DIR}/dispatch.py --deps.")
         crint('Please restart', 'yellow')
         sys.exit(0)
-    aws_access_key_id, aws_secret_access_key = get_access_secret_keys(creds)
-    region_name = get_region_name(creds)
-    bucket_name = get_bucket_name(creds)
+    aws_access_key_id = creds.aws_access_key_id
+    aws_secret_access_key = creds.aws_secret_access_key
+    region_name = creds.region_name
+    bucket_name = creds.bucket_name
     S3 = boto3.client(
         "s3",
         aws_access_key_id     = aws_access_key_id,
@@ -692,55 +835,12 @@ def get_s3_bucket(creds: dict[str, str]):
     )
     return S3, bucket_name
 
-
-def get_bucket_name(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "PRIVATE_BUCKET_NAME")
-
-def get_region_name(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "PRIVATE_BUCKET_REGION")
-
-def get_access_secret_keys(creds: dict[str, str]) -> tuple[str, str]:
-    return (
-        _require_cred_value(creds, "PRIVATE_AWS_ACCESS_KEY_ID"),
-        _require_cred_value(creds, "PRIVATE_AWS_SECRET_ACCESS_KEY"),
-    )
-
-def get_sudo_password(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SUDO_PASSWORD")
-
-
-def get_seps_hmac_secret(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_HMAC_SECRET")
-
-
-def get_seps_server_email(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_SERVER_EMAIL")
-
-
-def get_seps_server_password(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_SERVER_PASSWORD")
-
-
-def get_seps_server_ip(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_SERVER_IP")
-
-
-def get_seps_server_domain(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_SERVER_DOMAIN")
-
-
-def get_seps_server_instance_id(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_SERVER_INSTANCE_ID")
-
-
-def get_seps_server_name(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "SEPS_SERVER_NAME")
-
 # ----------------------------
-def get_lambda(creds: dict):
+def get_lambda(creds: Creds):
     import boto3
-    aws_access_key_id, aws_secret_access_key = get_access_secret_keys(creds)
-    region_name = get_region_name(creds)
+    aws_access_key_id = creds.aws_access_key_id
+    aws_secret_access_key = creds.aws_secret_access_key
+    region_name = creds.region_name
     
     lambda_client = boto3.client(
         'lambda',
@@ -750,18 +850,6 @@ def get_lambda(creds: dict):
     )
     return lambda_client
 
-
-# -----------------------------------
-def get_groq(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "GROQ_KEY")
-
-
-def get_gh_pat(creds: dict[str, str]) -> str:
-    return _require_cred_value(creds, "GITHUB_PAT")
-
-
-def get_ec2_client():
-    ...
 
 
 
