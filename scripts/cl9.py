@@ -475,7 +475,7 @@ def get_cl9() -> bool: # --cl9
 # ===========================
 
 # -----------------------------
-def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy paste it from utils.py which has the original version
+def getclip(warn_tty: bool=True, verbose: bool=False) -> Optional[str]: # copy paste it from utils.py which has the original version
     """
     Robust clipboard getter.
 
@@ -496,7 +496,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
     try:
         import pyperclip 
         data = pyperclip.paste() 
-        if debug:
+        if verbose:
             print("Using Native Pyperclip")
         return data if isinstance(data, str) else None
     except Exception:
@@ -515,7 +515,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
                 check=False
             )
             if proc.returncode == 0:
-                if debug:
+                if verbose:
                     print("using wl-paste")
                 return proc.stdout.decode(errors="replace")
         except Exception:
@@ -533,7 +533,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
                 check=False
             )
             if proc.returncode == 0:
-                if debug:
+                if verbose:
                     print("using xclip")
                 return proc.stdout.decode(errors="replace")
         except Exception:
@@ -550,7 +550,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
                 check=False
             )
             if proc.returncode == 0:
-                if debug:
+                if verbose:
                     print("using termux get")
                 return proc.stdout.decode(errors="replace")
         except Exception:
@@ -567,7 +567,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
                 check=False
             )
             if proc.returncode == 0:
-                if debug:
+                if verbose:
                     print("Using pbpaste")
                 return proc.stdout.decode(errors="replace")
         except Exception:
@@ -587,7 +587,7 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
                     check=False
                 )
                 if proc.returncode == 0:
-                    if debug:
+                    if verbose:
                         print("using TMUX")
                     if warn_tty:
                         print("Pasted from tmux load-buffer")
@@ -595,9 +595,44 @@ def getclip(warn_tty: bool=True, debug: bool=False) -> Optional[str]: # copy pas
             except Exception:
                 pass
 
+    # 7. Explicit SSH controller clipboard hook
+    if os.environ.get("SSH_CONNECTION") or os.environ.get("SSH_CLIENT") or os.environ.get("SSH_TTY"):
+        _template = (
+            os.environ.get("SEP_SSH_CLIP_GET")
+            or os.environ.get("CL9_SSH_CLIP_GET")
+            or ""
+        ).strip()
+        if _template:
+            _connection = (os.environ.get("SSH_CONNECTION") or "").strip().split()
+            _client = (os.environ.get("SSH_CLIENT") or "").strip().split()
+            _ctx = {
+                "client_ip": _connection[0] if len(_connection) >= 1 else (_client[0] if len(_client) >= 1 else ""),
+                "client_port": _connection[1] if len(_connection) >= 2 else (_client[1] if len(_client) >= 2 else ""),
+                "server_ip": _connection[2] if len(_connection) >= 3 else "",
+                "server_port": _connection[3] if len(_connection) >= 4 else "",
+                "ssh_tty": os.environ.get("SSH_TTY", ""),
+            }
+            try:
+                _command = _template.format(**_ctx)
+                _proc = subprocess.run(
+                    _command,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    check=False
+                )
+                if _proc.returncode == 0:
+                    if verbose:
+                        print("using SSH controller clipboard command")
+                    if warn_tty:
+                        print("Pasted from SSH controller clipboard command")
+                    return _proc.stdout.decode(errors="replace")
+            except Exception:
+                pass
 
-    # 7. Total failure
-    if debug:
+
+    # 8. Total failure
+    if verbose:
         print("Total Failure")
     return None
 
