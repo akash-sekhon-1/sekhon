@@ -2005,7 +2005,12 @@ def _configure_creds_interactive(
     changed_keys: list[str] = []
     for cred_key in keys_to_edit:
         current_value = working.get(cred_key, "").strip() or None
-        new_value = _prompt_for_cred_value(cred_key, current_value=current_value)
+
+        try:
+            new_value = _prompt_for_cred_value(cred_key, current_value=current_value)
+        except (KeyboardInterrupt, EOFError):
+            break
+        
         if new_value is None:
             return False
         if new_value != working.get(cred_key, "").strip():
