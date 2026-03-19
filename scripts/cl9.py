@@ -36,7 +36,7 @@ from getpass import getuser
 from pathlib import Path
 from socket import gethostname
 from textwrap import fill
-from typing import Callable, Dict, Mapping, NewType, Optional
+from typing import Callable, Dict, Iterable, Mapping, NewType, Optional
 
 
 
@@ -415,17 +415,19 @@ def get_cl9() -> bool: # --cl9
     print("\n[init] Fetching program archive from S3 ...")
     tgz = _download_bytes_from_s3(BUCKET_NAME, AWS_TGZ_KEY, S3)
 
-    print("[init] Cleaning target directory:", LOCAL_MAIN_DIR)
-    _purge_dir(LOCAL_MAIN_DIR)
-
-
     with tempfile.TemporaryDirectory(prefix="flashcards_unpack_") as tmpd:
         tmpd = Path(tmpd)
         print("[init] Extracting archive")
         _extract_tgz_bytes_to_dir(tgz, tmpd) # updated too to handle Path
+        managed_roots = _sync_manifest_roots(tmpd)
+
+        print("[init] Cleaning managed roots in target directory:", ", ".join(managed_roots))
+        _purge_selected_entries(LOCAL_MAIN_DIR, managed_roots)
 
         # Copy all extracted contents into main_path
         for src in tmpd.iterdir():
+            if src.name == ".cl9_sync_manifest.json":
+                continue
             dst = LOCAL_MAIN_DIR / src.name
             if src.is_dir():
                 shutil.copytree(src, dst, dirs_exist_ok=True)
@@ -882,6 +884,22 @@ def _purge_dir(path: Path) -> None:
             print(f"[WARN] Failed to delete {entry}: {e!r}")
 
 
+def _purge_selected_entries(path: Path, names: Iterable[str]) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+
+    for name in names:
+        target = path / name
+        if not target.exists() and not target.is_symlink():
+            continue
+        try:
+            if target.is_dir() and not target.is_symlink():
+                shutil.rmtree(target)
+            else:
+                target.unlink()
+        except Exception as e:
+            print(f"[WARN] Failed to delete {target}: {e!r}")
+
+
 # ----------------------------------------------------------------
 def _download_bytes_from_s3(bucket: str, key: S3Key, S3) -> bytes:
     obj = S3.get_object(Bucket=bucket, Key=key)
@@ -899,6 +917,28 @@ def _extract_tgz_bytes_to_dir(tgz_bytes: bytes, dest_dir: Path) -> None:
                     continue
                 member.name = member_path.lstrip(os.sep)
                 tf.extract(member, dest_dir, set_attrs=True)
+
+
+def _sync_manifest_roots(unpack_dir: Path) -> list[str]:
+    manifest_path = unpack_dir / ".cl9_sync_manifest.json"
+    if manifest_path.is_file():
+        try:
+            payload = json.loads(manifest_path.read_text())
+            roots = payload.get("roots", [])
+            if isinstance(roots, list):
+                cleaned = [str(name).strip() for name in roots if str(name).strip()]
+                if cleaned:
+                    return sorted(set(cleaned))
+        except Exception as e:
+            print(f"[WARN] Failed to read sync manifest: {e!r}")
+
+    return sorted(
+        {
+            path.name
+            for path in unpack_dir.iterdir()
+            if path.name != ".cl9_sync_manifest.json"
+        }
+    )
 
 # ----------------------------------------------------------------
 def get_file_s3(aws_key: S3Key, dest_name: Path, bucket_name: str, S3) -> bool:
