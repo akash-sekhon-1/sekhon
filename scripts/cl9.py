@@ -211,8 +211,7 @@ AWS_REQ_KEYS = {
 
     "GROQ_KEY": "API key of Groq LLM",
     "GITHUB_PAT": "GitHub Token for storing a public version of cl9.py and inf.py (and bash sripts)",
-    "SUDO_PASSWORD": "The sudo password for this device.",
-    "SEP_SERVER_KEY": "The API key to access the sep-server"
+    "SUDO_PASSWORD": "The sudo password for this device."
 }
 
 CREDS_EXIT_WORDS = {"aban", "end", "exit", "ooo", "q", "quit"}
@@ -747,14 +746,6 @@ class Creds:
         self.set("GROQ_KEY", value)
 
     @property
-    def sep_server_key(self) -> str | None:
-        return self.get("SEP_SERVER_KEY") 
-    
-    @sep_server_key.setter
-    def sep_server_key(self, value: str | None) -> None:
-        self.set("SEP_SERVER_KEY", value)
-
-    @property
     def github_pat(self) -> str | None:
         return self.get("GITHUB_PAT")
 
@@ -798,7 +789,7 @@ def get_s3_bucket(creds: Creds):
     try:
         import boto3
     except ModuleNotFoundError:
-        crint(f"boto3 is not installed. Please install it (python3 -m pip install boto3) or simply run {LOCAL_MAIN_DIR}/dispatch.py --deps.")
+        crint(f"boto3 is not installed. Run {LOCAL_MAIN_DIR}/dispatch.py --deps to install the managed Python environment.")
         crint('Please restart', 'yellow')
         sys.exit(0)
     aws_access_key_id = creds.aws_access_key_id
