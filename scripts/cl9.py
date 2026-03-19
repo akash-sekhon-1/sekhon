@@ -767,8 +767,11 @@ _CREDS_SINGLETON: Creds | None = None
 
 def _load_current_creds_dict() -> dict[str, str]:
     if not LOCAL_CREDS_PATH.is_file():
-        if not coder_main():
-            sys.exit(2)
+        # if not coder_main():
+        #     sys.exit(2)
+        crint("Use python3", end='')
+        crint(" python3 ~/cl9/m/cl9.py creds set", 'yellow')
+        sys.exit(2)
 
     data = decoder_main()
     if data is None:
