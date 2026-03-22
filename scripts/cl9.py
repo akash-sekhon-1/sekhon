@@ -120,11 +120,9 @@ LOCAL_SYNC_TS_FILE = LOCAL_BASES_DIR / ".last_sync_ts.txt"
 
 # cache
 LOCAL_MAIN_CACHE_PATH = LOCAL_JSON_DIR / ".all_json_cache.json.gz"
-LOCAL_ABBR_DATA = LOCAL_JSON_DIR / "abbr_data.json.gz"
 
 # automated backups
 LOCAL_BACKUPS_DIR = LOCAL_CL9_DIR / "backups"
-LOCAL_ABBR_BACKUP_DIR = LOCAL_BACKUPS_DIR / "abbr"
 LOCAL_FILES_BU_DIR   = LOCAL_CL9_DIR / "automated_backups" / "flashcards_all"
 LOCAL_SCRIPTS_BU_DIR = LOCAL_CL9_DIR / "automated_backups" / "scripts"
 
@@ -184,7 +182,6 @@ DIRS_TO_CREATE: tuple[Path] = (
     LOCAL_TMP_DIR,
     LOCAL_VERSION_DIR,
     LOCAL_BACKUPS_DIR,
-    LOCAL_ABBR_BACKUP_DIR,
     LOCAL_DEV_DIR
 )
 
@@ -252,8 +249,6 @@ AWS_AWS_PRE: S3Key = "aws/"
 AWS_SPEECH_PRE: S3Key = "speech/"
 AWS_MANY_PRE: S3Key = "many/" # many/n0, many/n1, ...
 AWS_DUSTBIN30_PRE: S3Key = "dustbin30/"
-
-AWS_ABBR_DATA_KEY: S3Key = f"{AWS_JSON_PRE}abbr_data.json.gz"
 
 AWS_MAIN_PRE: S3Key        = f"{AWS_BASES_PRE}m/"
 AWS_DELTAS_PRE: S3Key      = f"{AWS_BASES_PRE}d/"
@@ -453,7 +448,7 @@ def get_cl9() -> bool: # --cl9
     elif len(aws_versions) > 1:
         version_key = max(aws_versions, key=lambda x: float(x.removeprefix('v').split('_')[0]))
     else:
-        print(f"[Error] No version file found in S3. Please run update_flashcards.py from the host device to create one")
+        print(f"[Error] No version file found in S3. Please run update_sep.py from the host device to create one")
         return False
 
     local_version_dst: Path = LOCAL_VERSION_DIR / version_key.split('/')[-1]
