@@ -84,6 +84,14 @@ except:
 # MARK: PATH CONST
 # ===========================
 
+def _discover_main_dir() -> Path:
+    here = Path(__file__).resolve()
+    for candidate in here.parents:
+        if (candidate / "dispatch.py").is_file() and (candidate / "pyproject.toml").is_file():
+            return candidate
+    raise RuntimeError(f"Unable to discover repo root from {here}")
+
+
 # Root
 LOCAL_CL9_DIR           = HOME / PROGRAM_NAME
 LOCAL_ALIAS_PATH        = HOME / ".cl9"
@@ -91,7 +99,7 @@ LOCAL_DUSTBIN           = HOME / "AD" / "AD_4M"
 
 
 # Core SubDir
-LOCAL_MAIN_DIR    = LOCAL_CL9_DIR / "m"
+LOCAL_MAIN_DIR    = _discover_main_dir()
 LOCAL_JSON_DIR    = LOCAL_CL9_DIR / "j"
 LOCAL_TMP_DIR     = LOCAL_CL9_DIR / "tmp"
 LOCAL_FLAGS_DIR   = LOCAL_CL9_DIR / "flags"
@@ -491,7 +499,7 @@ def getclip(warn_tty: bool=True, verbose: bool=False) -> Optional[str]: # copy p
 
     # 1. pyperclip
     try:
-        import pyperclip 
+        import pyperclip # type: ignore
         data = pyperclip.paste() 
         if verbose:
             print("Using Native Pyperclip")
