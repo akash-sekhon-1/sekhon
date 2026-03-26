@@ -2195,7 +2195,7 @@ def decoder_main() -> Optional[dict[str, str]]:
 
 
 # -----------------------
-def validate_cache():
+def validate_cache(verbose: bool=True):
     """
     Equivalent to: sudo -v
     Refresh TTL if cache exists and is valid.
@@ -2204,7 +2204,8 @@ def validate_cache():
     if refresh is False:
         decoder_main()
     
-    print("Cache validated (TTL refreshed).")
+    if verbose:
+        print("Cache validated (TTL refreshed).")
 
 
 # -----------------------
