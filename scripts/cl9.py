@@ -647,15 +647,27 @@ def getclip(warn_tty: bool=True, verbose: bool=False) -> Optional[str]: # copy p
 def _prompt_line(msg: str) -> str:
     try:
         from prompt_toolkit import prompt
-        return prompt(msg)
-    except:
-        return input(msg)
+        value = prompt(msg)
+    except (EOFError, KeyboardInterrupt):
+        return "ooo"
+    except Exception:
+        try:
+            value = input(msg)
+        except (EOFError, KeyboardInterrupt):
+            return "ooo"
+
+    if value.strip().lower() == "q":
+        return "exit"
+    return value
     
 
 # --------------------------------------
 def _prompt_password(msg: str) -> str:
     # prompt_toolkit optional, but getpass is good enough and safe
-    return getpass.getpass(msg)
+    try:
+        return getpass.getpass(msg)
+    except (EOFError, KeyboardInterrupt):
+        return "ooo"
 
 
 
