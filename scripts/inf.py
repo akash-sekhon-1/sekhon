@@ -418,6 +418,7 @@ def get_input(text, strip: bool = True, lower:bool=True) -> Optional[str]:
     - Never use input directly in the program.
     - Raise SystemExit if the program left open for a whole day (like in some bg terminal) to prevent corruption and all
     - Handle Ctrl + C and Ctrl + D, offering graceful exit.
+    - Normalizes q to exit and Ctrl + C / Ctrl + D to ooo.
     """
     try: 
         from prompt_toolkit import PromptSession
@@ -436,8 +437,11 @@ def get_input(text, strip: bool = True, lower:bool=True) -> Optional[str]:
         if lower:
             r = r.lower()
 
-    except (KeyboardInterrupt, EOFError):
-        return None
+        if r.strip().lower() == "q":
+            return "exit"
+
+    except (EOFError, KeyboardInterrupt):
+        return "ooo"
     return r
 
 
@@ -792,6 +796,3 @@ OPTS = {
 # ------------------------
 if __name__ == "__main__":
     main()
-
-
-
