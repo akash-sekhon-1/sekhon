@@ -10,6 +10,6 @@
   "bash/ricing/termux.sh": "9abcb5c218dee181df50311c17c99993f681f27065cf5e82102f76e82dac7cab",
   "bash/ull.sh": "e574bfb02c5598caf13e98f4efa0e0c8b6f90429c0a9167703ab9ee014f8458d",
   "bash/vscode.sh": "b59e36866c7b2123fa06a1ef7fae4e3440bdaca0d4243bfa88de26c5ac75329c",
-  "scripts/cl9.py": "e7bdbc4d082bec9e24ee7eb88404d7812ce80254fc04de3076c3e4c07ec94193",
-  "scripts/inf.py": "4af5d8632e433ade083294986094cca31cb9061d7157bcd3d5209f25d35971af"
+  "scripts/cl9.py": "677bc4eafd30d8a1e8b2bbcb922a37903743b70c88c1a0a1f618816c926892f5",
+  "scripts/inf.py": "cce9eadb4d8ae301b1cc7aeb4a043caa7c3599f7e2c21a7ca442ae911022bd08"
 }
