@@ -149,7 +149,7 @@ LOCAL_MAKE_OFFLINE_PATH = LOCAL_JSON_DIR / ".make_offline.txt"
 LOCAL_S3_LISTING_STATS_PATH = LOCAL_JSON_DIR / ".s3_listing_stats.json"
 
 LOCAL_TEXT_HISTORY = LOCAL_JSON_DIR / ".text_history.json.gz" # THIS path is also mentioned in ins_adder.py (not imported to keep that fast) # has two keys, 'last_sync': ts and 'history': {hash: date}
-
+LOCAL_DECKS_ADDED = LOCAL_JSON_DIR / "decks_added.json.gz"
 
 # Scripts
 LOCAL_CL9_NAME = "cl9.py"
