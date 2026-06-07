@@ -128,6 +128,7 @@ LOCAL_SYNC_TS_FILE = LOCAL_BASES_DIR / ".last_sync_ts.txt"
 
 # cache
 LOCAL_MAIN_CACHE_PATH = LOCAL_JSON_DIR / ".all_json_cache.json.gz"
+LOCAL_USER_CACHE_DIR = HOME / ".cache" / "neurodeck"
 
 # automated backups
 LOCAL_BACKUPS_DIR = LOCAL_CL9_DIR / "backups"
@@ -150,6 +151,10 @@ LOCAL_S3_LISTING_STATS_PATH = LOCAL_JSON_DIR / ".s3_listing_stats.json"
 
 LOCAL_TEXT_HISTORY = LOCAL_JSON_DIR / ".text_history.json.gz" # THIS path is also mentioned in ins_adder.py (not imported to keep that fast) # has two keys, 'last_sync': ts and 'history': {hash: date}
 LOCAL_DECKS_ADDED = LOCAL_JSON_DIR / "decks_added.json.gz"
+
+
+# Local Caches
+LOCAL_SYNONYM_CACHE_FILE = LOCAL_USER_CACHE_DIR / "synonyms_cache.json.gz"
 
 # Scripts
 LOCAL_CL9_NAME = "cl9.py"
@@ -190,7 +195,8 @@ DIRS_TO_CREATE: tuple[Path] = (
     LOCAL_TMP_DIR,
     LOCAL_VERSION_DIR,
     LOCAL_BACKUPS_DIR,
-    LOCAL_DEV_DIR
+    LOCAL_DEV_DIR,
+    LOCAL_USER_CACHE_DIR
 )
 
 
